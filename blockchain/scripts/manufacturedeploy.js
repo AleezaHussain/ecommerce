@@ -3,7 +3,7 @@ const fs = require("fs");
 
 async function main() {
     // Get the contract factory
-    const ManufacturerStorage = await hre.ethers.getContractFactory("ManufacturerStorage");
+    const ManufacturerStorage = await hre.ethers.getContractFactory("ManufacturerNFTStorage");
 
 
     console.log("🚀 Deploying ManufacturerStorage contract...");

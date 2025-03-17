@@ -3,51 +3,6 @@
 import { useState } from "react";
 import { ethers } from "ethers";
 
-import Image from "next/image";
-import ManufacturerForm from "@/app/components/ManufacturerForm";
-
-export default function ManufacturerRegistrationForm() {
-  return (
-    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          zIndex: -1,
-        }}
-      >
-        <source src="/videos/acha.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      <div style={{ display: "flex", height: "100vh" }}>
-        <div style={{ width: "50%", padding: "20px" }}>
-          <ManufacturerForm />
-        </div>
-        <div
-          style={{
-            width: "50%",
-            backgroundImage: `url(/dekho.jpg)`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        ></div>
-      </div>
-    </div>
-  );
-}
-"use client"; // Ensure this directive is at the top for client-side rendering
-
-import { useState } from "react";
-import { ethers } from "ethers";
-
 export default function ManufacturerRegistrationForm() {
   const [formData, setFormData] = useState({
     name: "",

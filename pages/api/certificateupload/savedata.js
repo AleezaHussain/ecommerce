@@ -41,8 +41,11 @@
 //     console.log("📏 Binary Buffer Size:", binaryBuffer.length, "bytes");
 
 //     const bucketName = "certification_pdf_storage";
+<<<<<<< HEAD
 //     const fileName = certificate_${Date.now()}.pdf;
+=======
 //     const fileName = `certificate_${Date.now()}.pdf`;
+>>>>>>> mavra
 
 //     console.log("📤 Uploading PDF to Supabase Storage...");
 //     const { data: uploadData, error: uploadError } = await supabase.storage

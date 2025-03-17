@@ -1,25 +1,16 @@
 import { getManufacturerById } from "../../../lib/getmanufacturer";
-import {
-  uploadJSONToPinata,
-  uploadPDFFromURLToPinata,
-} from "../../../pages/api/ipfs/uploadToIPFS";
+import { uploadJSONToPinata, uploadPDFFromURLToPinata } from "../../../pages/api/ipfs/uploadToIPFS";
 import { storeManufacturerData } from "../blockchain/blockchain";
-import { acceptManufacturer } from "../../../lib/adminmanufacturerfetch";
+import { acceptManufacturer } from "../../../lib/admindatafetch";
 
-const handleAccept = async (
-  id,
-  setAcceptedManufacturers,
-  setPendingManufacturers
-) => {
+const handleAccept = async (id, setAcceptedManufacturers, setPendingManufacturers) => {
   try {
     console.log(`🔍 Fetching manufacturer data for ID: ${id}`);
 
     const manufacturer = await getManufacturerById(id);
 
     if (!manufacturer || !manufacturer.wallet_address) {
-      console.error(
-        "❌ Manufacturer data not found or missing wallet address."
-      );
+      console.error("❌ Manufacturer data not found or missing wallet address.");
       return;
     }
 
@@ -39,18 +30,10 @@ const handleAccept = async (
     }
 
     console.log("🔗 Storing Manufacturer Data on Blockchain...");
-    const txn = await storeManufacturerData(
-      manufacturer.wallet_address,
-      jsonCID,
-      pdfCID
-    );
+    const txn = await storeManufacturerData(manufacturer.wallet_address, jsonCID, pdfCID);
 
     console.log("Blockchain transaction receipt (txn):", txn);
-    console.log(
-      "Transaction status explicitly:",
-      txn?.status,
-      typeof txn.status
-    );
+    console.log("Transaction status explicitly:", txn?.status, typeof txn.status);
 
     if (txn && txn.status === 1) {
       console.log("✅ Manufacturer Data Stored on Blockchain!");
@@ -64,15 +47,11 @@ const handleAccept = async (
 
         setAcceptedManufacturers((prev) => [
           ...prev,
-          { ...manufacturer, status: "accepted", jsonCID, pdfCID },
+          { ...manufacturer, status: "accepted", jsonCID, pdfCID }
         ]);
-        setPendingManufacturers((prev) =>
-          prev.filter((m) => m.manufacturer_id !== id)
-        );
+        setPendingManufacturers((prev) => prev.filter((m) => m.manufacturer_id !== id));
 
-        console.log(
-          "🎉 Manufacturer accepted, data stored on IPFS & Blockchain!"
-        );
+        console.log("🎉 Manufacturer accepted, data stored on IPFS & Blockchain!");
       } else {
         console.error("❌ Failed to update manufacturer status in DB.");
       }

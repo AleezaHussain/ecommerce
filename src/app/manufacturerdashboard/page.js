@@ -22,6 +22,10 @@ import Modal from "@mui/material/Modal";
 import AddIcon from "@mui/icons-material/Add";
 import MedicineForm from '../medicineregistration/page';
 
+import { fetchPendingMedicines } from "../pendingmedicine/fetchfunction"; 
+
+
+
 // Sample data for medicine uses
 const medicineUses = {
   1: "Used to relieve pain and reduce fever.",
@@ -182,6 +186,22 @@ const ManufacturerDashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);  
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(1);
+
+
+
+
+  // edited by aleeza
+  useEffect(() => {
+    if (activeTab === "pending") {
+      fetchPendingMedicines().then(setPendingMedicines);
+      console.log
+    }
+  }, [activeTab]); // Fetch pending medicines when the active tab changes
+
+
+
+
+
 
   useEffect(() => {
     setIsClient(true);
@@ -494,7 +514,7 @@ const ManufacturerDashboard = () => {
   centered
 >
   {/* Pending Tab */}
-  <Tab
+  {/* <Tab
     label="Pending Medicines"
     value="pending"
     sx={{
@@ -508,7 +528,32 @@ const ManufacturerDashboard = () => {
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
       },
     }}
-  />
+  /> */}
+
+
+{/* aleeza code */}
+<Tab
+  label="Pending Medicines"
+  value="pending"
+  onClick={async () => {
+    const medicines = await fetchPendingMedicines();
+    setPendingMedicines(medicines); // ✅ Store the data in state
+  }}
+  sx={{
+    fontSize: "1rem",
+    padding: "12px 24px",
+    color: "#000000",
+    fontWeight: activeTab === "pending" ? "bold" : "normal",
+    "&:hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.8)",
+      borderRadius: "8px",
+      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+    },
+  }}
+/>
+
+
+
 
   {/* Accepted Tab */}
   <Tab

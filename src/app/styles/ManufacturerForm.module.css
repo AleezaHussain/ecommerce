@@ -1,0 +1,127 @@
+.formContainer {
+    position: relative;
+    max-width: 500px;
+    background: #e0f7fa; /* Light blue background */
+    padding: 20px;
+    border-radius: 20px; /* Rounded corners */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  
+  .heading {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #007bff; /* Blue header */
+  }
+  
+  .label {
+    display: block;
+    font-weight: bold;
+    margin: 10px 0 5px;
+    text-align: left;
+    color: black;
+  }
+  
+  .inputContainer {
+    position: relative;
+    width: 100%;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 10px 40px 10px 10px; /* Extra padding on right to accommodate the button */
+    border: 2px solid #007bff; /* Blue border */
+    border-radius: 5px;
+    margin-bottom: 5px;
+    color: black;
+  }
+  
+  
+  .error {
+    color: red;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  
+  /* 🔹 Upload Button */
+  .uploadButton {
+    width: 100%;
+    padding: 12px;
+    background: #0056b3; /* Darker blue */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  .uploadButton:hover {
+    background: #003d82; /* Even darker blue */
+  }
+  
+  /* 🔹 PDF Preview */
+  .previewContainer {
+    margin-top: 10px;
+    text-align: center;
+  }
+  
+  .pdfPreview {
+    width: 100%;
+    height: 300px;
+    border: 1px solid #ddd;
+  }
+  
+  .checkboxContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: black;
+  }
+  
+  .submitButton {
+    background: #007bff; /* Blue submit button */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 20px; /* Rounded submit button */
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .submitButton:hover {
+    background: #0056b3; /* Darker blue on hover */
+  }
+  
+  .doctorAnimation {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 50px; /* Smaller image */
+    height: 50px; /* Smaller image */
+    animation: wave 2s linear infinite;
+  }
+  
+  @keyframes wave {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-5px) rotate(10deg);
+    }
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+  }
+  
+  .buttonInsideInput {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+  }
