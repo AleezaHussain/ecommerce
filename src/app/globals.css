@@ -15,12 +15,6 @@
 }
 
 body {
-<<<<<<< HEAD
   background-color:#EEF2F6 ;
   font-family:'Verdana, Geneva, Tahoma, sans-serif';
-=======
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
->>>>>>> cc8a60d0b5ed4e176b2e17c9adfec99f80d67d4a
 }

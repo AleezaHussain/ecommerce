@@ -69,13 +69,8 @@ export default async function handler(req, res) {
             - medicine_name
             - dosage_form
             - batch_number
-<<<<<<< HEAD
             - excipients
     
-=======
-            - excipients (array format)
-
->>>>>>> cc8a60d0b5ed4e176b2e17c9adfec99f80d67d4a
             Return only the JSON object, **without markdown formatting**. Here is the extracted text:
             ${extractedText}`,
           },
@@ -90,7 +85,6 @@ export default async function handler(req, res) {
       }
     );
 
-<<<<<<< HEAD
     const structuredData = aiResponse.data.choices?.[0]?.message?.content?.trim() || "";
 console.log("🔍 AI Raw Response:", structuredData);
 
@@ -110,17 +104,6 @@ try {
 
 console.log("✅ Extracted Data:", jsonData);
 return res.status(200).json({ message: "Certificate processed successfully", extractedData: jsonData });
-=======
-    const structuredData = qwenResponse.data.choices[0]?.message?.content.trim();
-    const cleanedJson = structuredData.replace(/```json|```/g, "").trim();
-    const jsonData = JSON.parse(cleanedJson);
-
-    console.log("📡 Returning extracted data...");
-    return res.status(200).json({
-      message: "Certificate processed successfully",
-      extractedData: jsonData,
-    });
->>>>>>> cc8a60d0b5ed4e176b2e17c9adfec99f80d67d4a
   } catch (error) {
     console.error("❌ Unexpected error:", error);
     return res.status(500).json({ message: "Internal Server Error" });

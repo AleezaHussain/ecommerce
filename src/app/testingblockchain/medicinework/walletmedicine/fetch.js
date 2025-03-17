@@ -25,8 +25,7 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress, statu
     const statusMapping = { "Pending": 0, "Rejected": 1, "Accepted": 2 };
     const statusEnumValue = statusMapping[status];
 
-    const tokenIds = await contract.getMedicinesByManufacturerAndStatus(walletAddress, statusEnumValue);
-    console.log(`✅ ${status} Medicine IDs:`, tokenIds);
+    const tokenIds = await contract.getMedicinesByManufacturer(walletAddress, statusEnumValue);    console.log(`✅ ${status} Medicine IDs:`, tokenIds);
 
     let medicines = [];
     for (const tokenId of tokenIds) {
