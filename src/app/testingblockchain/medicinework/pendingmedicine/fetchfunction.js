@@ -88,16 +88,17 @@ export const updateMedicineStatus = async (tokenId, newStatus) => {
   
       // ✅ Send transaction to update status
       const tx = await contract.updateStatus(tokenId, statusEnumValue);
-      await tx.wait(); // ✅ Wait for confirmation
+      const receipt = await tx.wait(); // Wait for confirmation
   
-      console.log(`✅ Medicine status updated successfully: Token ID ${tokenId} -> ${newStatus}`);
-      alert(`Medicine ${tokenId} successfully updated to ${newStatus}`);
-      
-      return true;
+      if (receipt.status === 1) {
+        console.log(`✅ Medicine status updated successfully: Token ID ${tokenId} -> ${newStatus}`);
+        return true;
+      } else {
+        console.error("❌ Transaction failed");
+        return false;
+      }
     } catch (error) {
       console.error("❌ Error updating medicine status:", error);
-      alert("Failed to update medicine status.");
-      return false;
+      throw error; // Throw the error to be caught by the calling function
     }
   };
-  

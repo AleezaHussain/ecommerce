@@ -1,241 +1,312 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import Image from "next/image";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import InputAdornment from "@mui/material/InputAdornment";
+import LockIcon from '@mui/icons-material/Lock';
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
+import CloseIcon from '@mui/icons-material/Close';
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Modal from "@mui/material/Modal";
+import CardMedia from '@mui/material/CardMedia';
+import CircularProgress from '@mui/material/CircularProgress';
 import AddIcon from "@mui/icons-material/Add";
-import MedicineForm from '../testpage3/page';
+import MedicineForm from '../medicineregistration/page';
+import { SuccessMsgBox, ErrorMsgBox, InfoMsgBox } from '../components/MsgBox';
+import AcceptedMedicinesChart from './AcceptedMedicinesChart';
+import PendingMedicinesChart from './PendingMedicinesChart';
+import RejectedMedicinesChart from './RejectedMedicinesChart';
+import { handleSubmit } from '../testpage3/formsubmit';
+import PendingMedicineCards from './PendingMedicineCards';
+import AcceptedMedicineCards from './AcceptedMedicineCards';
+import RejectedMedicineCards from './RejectedMedicineCards';
+import SaleMedicineCards from './SaleMedicineCards';
+import { fetchMedicinesByStatus } from '../testingblockchain/medicinework/accepted-rejected/fetch';
+import MedicineDetails from './MedicineDetails';
+import { getApprovedManufacturers } from "../testingblockchain/accepted-rejected-manufacturer/fetch";
 
-import { fetchPendingMedicines } from "../pendingmedicine/fetchfunction"; 
-
-
-
-// Sample data for medicine uses
-const medicineUses = {
-  1: "Used to relieve pain and reduce fever.",
-  2: "An antibiotic used to treat bacterial infections.",
-  3: "A vitamin supplement to boost immunity.",
-  4: "Used to relieve pain, inflammation, and fever.",
-  5: "Used to relieve pain, fever, and inflammation.",
-  6: "An antihistamine used to treat allergies.",
-  7: "Used to relieve pain, inflammation, and fever.",
-  8: "An antibiotic used to treat bacterial infections.",
-  9: "Used to reduce pain, fever, and inflammation.",
-  10: "An antihistamine used to treat allergies.",
-};
-
-// Medicine data for each tab with external image links
-const medicinesData = {
-  pending: [
-    {
-      id: 1,
-      name: "Paracetamol",
-      type: "Tablet",
-      image: "/images/p.png",
-      batchNumber: "BATCH-001",
-      manufactureDate: "01/01/2023",
-      expiryDate: "01/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 2,
-      name: "Amoxicillin",
-      type: "Antibiotic",
-      image: "/images/han.png",
-      batchNumber: "BATCH-002",
-      manufactureDate: "02/01/2023",
-      expiryDate: "02/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 3,
-      name: "Vitamin C",
-      type: "Capsule",
-      image: "/images/c.webp",
-      batchNumber: "BATCH-003",
-      manufactureDate: "03/01/2023",
-      expiryDate: "03/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 4,
-      name: "Ibuprofen",
-      type: "Tablet",
-      image: "/images/j.png",
-      batchNumber: "BATCH-004",
-      manufactureDate: "04/01/2023",
-      expiryDate: "04/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 5,
-      name: "Aspirin",
-      type: "Tablet",
-      image: "/images/l.png",
-      batchNumber: "BATCH-005",
-      manufactureDate: "05/01/2023",
-      expiryDate: "05/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 6,
-      name: "Cetirizine",
-      type: "Capsule",
-      image: "/images/cet.jpg",
-      batchNumber: "BATCH-006",
-      manufactureDate: "06/01/2023",
-      expiryDate: "06/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-  ],
-  accepted: [
-    {
-      id: 5,
-      name: "Aspirin",
-      type: "Tablet",
-      image: "/images/l.png",
-      batchNumber: "BATCH-005",
-      manufactureDate: "05/01/2023",
-      expiryDate: "05/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 4,
-      name: "Ibuprofen",
-      type: "Tablet",
-      image: "/images/j.png",
-      batchNumber: "BATCH-004",
-      manufactureDate: "04/01/2023",
-      expiryDate: "04/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-  ],
-  rejected: [
-    {
-      id: 9,
-      name: "Aspirin",
-      type: "Tablet",
-      image: "https://via.placeholder.com/150",
-      batchNumber: "BATCH-009",
-      manufactureDate: "09/01/2023",
-      expiryDate: "09/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-    {
-      id: 10,
-      name: "Cetirizine",
-      type: "Capsule",
-      image: "https://via.placeholder.com/150",
-      batchNumber: "BATCH-010",
-      manufactureDate: "10/01/2023",
-      expiryDate: "10/01/2025",
-      excipients: ["STARCH", "MAGNESIUM STEARATE", "TALC"],
-    },
-  ],
-};
-
-const acceptedData = [
-  { name: "Drugs", value: 50, color: "#E91E63", unfilledColor: "#E0E0E0" },
-  { name: "Capsules", value: 17, color: "#3357FF", unfilledColor: "#E0E0E0" },
-  { name: "Tablets", value: 30, color: "#FFA500", unfilledColor: "#E0E0E0" },
-  { name: "Antibiotics", value: 66, color: "#a812e3", unfilledColor: "#E0E0E0" },
-];
-
-const pendingData = JSON.parse(JSON.stringify([
-  { name: "Capsules", Capsules: 10 },
-  { name: "Tablets", Tablets: 20 },
-  { name: "Antibiotics", Antibiotics: 15 },
-  { name: "Drugs", Drugs: 25 },
-]));
-
-const rejectedData = [
-  { name: "Capsules", value: 5, color: "#3357FF" },
-  { name: "Tablets", value: 10, color: "#FFA500" },
-  { name: "Antibiotics", value: 20, color: "#a812e3" },
-  { name: "Drugs", value: 15, color: "#E91E63" },
-];
-
+import { 
+  addMedicineToSale, 
+  updateSaleMedicine, 
+  removeMedicineFromSale,
+  fetchAllSaleMedicines
+} from '../../../lib/saleMedicineDb';
+import { fetchMedicinesByManufacturerAndStatus } from "../testingblockchain/medicinework/walletmedicine/fetch";
+import { ethers } from "ethers";
+import NavBar from "../components/NavBar";
 const ManufacturerDashboard = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
   const [openModal, setOpenModal] = useState(false);
-  const [newMedicine, setNewMedicine] = useState({ name: "", type: "", image: "" });
-  const [hoveredCard, setHoveredCard] = useState(null);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const [saleModalOpen, setSaleModalOpen] = useState(false);
   const [salesData, setSalesData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);  
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [successMsg, setSuccessMsg] = useState({ open: false, message: "" });
+  const [errorMsg, setErrorMsg] = useState({ open: false, message: "" });
+  const [infoMsg, setInfoMsg] = useState({ open: false, message: "" });
+  const [pendingMedicines, setPendingMedicines] = useState([]);
+  const [acceptedMedicines, setAcceptedMedicines] = useState([]);
+  const [rejectedMedicines, setRejectedMedicines] = useState([]);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [manufacturerDetails, setManufacturerDetails] = useState({
+    name: "",
+    licenseNo: "",
+    certificate: ""
+  });
+  const [loading, setLoading] = useState({
+    pending: false,
+    accepted: false,
+    rejected: false,
+    wallet: true
+  });
 
-
-
-
-  // edited by aleeza
+  // Detect wallet address on component mount
   useEffect(() => {
-    if (activeTab === "pending") {
-      fetchPendingMedicines().then(setPendingMedicines);
-      console.log
+    // Update the detectWallet function in useEffect
+const detectWallet = async () => {
+  if (window.ethereum) {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      
+      // First verify the manufacturer is approved
+      await fetchManufacturerDetails(address);
+      
+      // Only set wallet address if verification passed
+      setWalletAddress(address);
+    } catch (error) {
+      console.error("Error detecting wallet:", error);
+      setErrorMsg({ 
+        open: true, 
+        message: error.message || "Failed to connect wallet" 
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, wallet: false }));
     }
-  }, [activeTab]); // Fetch pending medicines when the active tab changes
+  } else {
+    setLoading(prev => ({ ...prev, wallet: false }));
+    setErrorMsg({ 
+      open: true, 
+      message: "MetaMask not detected. Please install MetaMask." 
+    });
+  }
+};
 
-
-
-
-
-
-  useEffect(() => {
-    setIsClient(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000); // 5 seconds delay
-    return () => clearTimeout(timer);
+    detectWallet();
   }, []);
 
-  if (!isClient || isLoading) {
-    return (
-      <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#ADD8E6", position: "relative" }}>
-        <video autoPlay loop muted style={{ width: "100vw", height: "100vh", objectFit: "cover", position: "absolute", top: 0, left: 0 }}>
-          <source src="/color.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <Typography variant="h4" sx={{ position: "relative", color: "white", fontWeight: "bold", zIndex: 1 }}>
-          Loading...
-        </Typography>
-      </Box>
-    );
+  const fetchManufacturerDetails = async (address) => {
+    try {
+      // Fetch all approved manufacturers from blockchain
+      const approvedManufacturers = await getApprovedManufacturers();
+      console.log("Approved manufacturers:", approvedManufacturers); // Debug log
+      
+      // Find the manufacturer with matching wallet address
+      const manufacturer = approvedManufacturers.find(
+        m => m.walletAddress && m.walletAddress.toLowerCase() === address.toLowerCase()
+      );
+  
+      console.log("Found manufacturer:", manufacturer); // Debug log
+  
+      if (!manufacturer) {
+        throw new Error("Your account is not approved as a manufacturer");
+      }
+  
+      setManufacturerDetails({
+        name: manufacturer.manufacturerName || "Not available",
+        licenseNo: manufacturer.licenceNo || "Not available",
+        certificate: manufacturer.pdfCID ? `https://ipfs.io/ipfs/${manufacturer.pdfCID}` : "",
+        certificationNumber: manufacturer.certificationNumber || "Not available",
+        dateOfIssue: manufacturer.dateOfIssue || "Not available",
+        email: manufacturer.email || "Not available",
+        phoneNumber: manufacturer.phoneNumber || "Not available",
+        physicalAddress: manufacturer.physicalAddress || "Not available",
+        website: manufacturer.website || "Not available"
+      });
+    } catch (error) {
+      console.error("Error fetching manufacturer details:", error);
+      setErrorMsg({ 
+        open: true, 
+        message: error.message || "Failed to fetch manufacturer details" 
+      });
+      
+      // If there's an error (including not being approved), reset wallet address
+      setWalletAddress("");
+    }
+  };
+
+
+  // Fetch medicines when wallet address changes
+  useEffect(() => {
+    if (walletAddress) {
+      fetchAllMedicines();
+    }
+  }, [walletAddress]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const sales = await fetchAllSaleMedicines();
+        setSalesData(sales);
+      } catch (error) {
+        console.error('Error fetching sale medicines:', error);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
+  
+//   // Add this useEffect to redirect or show error if wallet is not approved
+// useEffect(() => {
+//   {/* Wallet Rejection Overlay */}
+// {!loading.wallet && !walletAddress && (
+//   <Box sx={{
+//     position: 'fixed',
+//     top: 0,
+//     left: 0,
+//     width: '100%',
+//     height: '100%',
+//     backgroundColor: 'rgba(0, 0, 0, 0.7)',
+//     zIndex: 2000,
+//     display: 'flex',
+//     flexDirection: 'column',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     color: 'white',
+//     backdropFilter: 'blur(4px)'
+//   }}>
+//     <LockIcon sx={{ fontSize: 80, mb: 3 }} />
+//     <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
+//       Access Denied
+//     </Typography>
+//     <Typography variant="body1" sx={{ maxWidth: '600px', textAlign: 'center', mb: 3 }}>
+//       Your account is not approved as a manufacturer or has been rejected by the admin.
+//       Please contact the administrator if you believe this is an error.
+//     </Typography>
+//     <Button 
+//       variant="contained" 
+//       color="error"
+//       onClick={() => window.location.reload()}
+//       sx={{ mt: 2 }}
+//     >
+//       Refresh Page
+//     </Button>
+//   </Box>
+// )}
+// }, [loading.wallet, walletAddress]);
+ 
+
+  // Fetch medicines when tab changes
+  useEffect(() => {
+    if (walletAddress) {
+      if (activeTab === 'pending') {
+        fetchPendingMedicines();
+      } else if (activeTab === 'accepted') {
+        fetchAcceptedMedicines();
+      } else if (activeTab === 'rejected') {
+        fetchRejectedMedicines();
+      }
+    }
+  }, [activeTab, walletAddress]);
+
+  // Update fetchAllMedicines and other fetch functions to include this check
+const fetchAllMedicines = async () => {
+  if (!walletAddress) {
+    setErrorMsg({ open: true, message: "Wallet not connected or not approved" });
+    return;
   }
+
+  try {
+    setLoading({
+      pending: true,
+      accepted: true,
+      rejected: true
+    });
+
+    const { pending, accepted, rejected } = await fetchMedicinesByManufacturerAndStatus(walletAddress);
+    
+    setPendingMedicines(pending);
+    setAcceptedMedicines(accepted);
+    setRejectedMedicines(rejected);
+
+  } catch (error) {
+    console.error('Error fetching medicines:', error);
+    setErrorMsg({ open: true, message: 'Failed to fetch medicines' });
+  } finally {
+    setLoading({
+      pending: false,
+      accepted: false,
+      rejected: false
+    });
+  }
+};
+
+  const fetchPendingMedicines = async () => {
+    if (!walletAddress) return;
+    
+    setLoading(prev => ({ ...prev, pending: true }));
+    try {
+      const { pending } = await fetchMedicinesByManufacturerAndStatus(walletAddress);
+      setPendingMedicines(pending);
+    } catch (error) {
+      console.error('Error fetching pending medicines:', error);
+      setErrorMsg({ open: true, message: 'Failed to fetch pending medicines' });
+    } finally {
+      setLoading(prev => ({ ...prev, pending: false }));
+    }
+  };
+
+  const fetchAcceptedMedicines = async () => {
+    if (!walletAddress) return;
+    
+    setLoading(prev => ({ ...prev, accepted: true }));
+    try {
+      const { accepted } = await fetchMedicinesByManufacturerAndStatus(walletAddress);
+      setAcceptedMedicines(accepted);
+    } catch (error) {
+      console.error('Error fetching accepted medicines:', error);
+      setErrorMsg({ open: true, message: 'Failed to fetch accepted medicines' });
+    } finally {
+      setLoading(prev => ({ ...prev, accepted: false }));
+    }
+  };
+
+  const fetchRejectedMedicines = async () => {
+    if (!walletAddress) return;
+    
+    setLoading(prev => ({ ...prev, rejected: true }));
+    try {
+      const { rejected } = await fetchMedicinesByManufacturerAndStatus(walletAddress);
+      setRejectedMedicines(rejected);
+    } catch (error) {
+      console.error('Error fetching rejected medicines:', error);
+      setErrorMsg({ open: true, message: 'Failed to fetch rejected medicines' });
+    } finally {
+      setLoading(prev => ({ ...prev, rejected: false }));
+    }
+  };
+
   const handleEditClick = (medicine) => {
     setSelectedMedicine(medicine);
-    setPrice(medicine.price || 0);  // If price exists, use it; otherwise, default to 0
-    setQuantity(medicine.quantity || 1);  // If quantity exists, use it; otherwise, default to 1
+    setPrice(medicine.price ? medicine.price.toString() : "0");
+    setQuantity(medicine.quantity ? medicine.quantity.toString() : "1");
     setEditModalOpen(true);
   };
+
   const handleCloseEditModal = () => {
     setEditModalOpen(false);
     setSelectedMedicine(null);
   };
-    
-
 
   const toggleSidebar = () => {
     setSidebarVisible(!sidebarVisible);
@@ -252,36 +323,27 @@ const ManufacturerDashboard = () => {
   const handleCloseModal = () => {
     setOpenModal(false);
   };
-  const handleAddMedicine = (medicine) => {
-    if (medicine.name && medicine.type && medicine.image) {
-      if (selectedMedicine) {
-        // Update existing medicine in salesData
-        const updatedSalesData = salesData.map((sale) =>
-          sale.id === selectedMedicine.id ? { ...sale, ...medicine } : sale
-        );
-        setSalesData(updatedSalesData);
-      } else {
-        // Add new medicine to the active tab
-        medicinesData[activeTab].push({
-          id: medicinesData[activeTab].length + 1,
-          ...medicine,
-        });
-      }
-      setNewMedicine({ name: "", type: "", image: "" });
-      setSelectedMedicine(null); // Reset selected medicine
+
+  const handleAddMedicine = async (medicineData) => {
+    try {
+      setInfoMsg({ open: true, message: "Please confirm transaction in MetaMask..." });
+      
+      const syntheticEvent = { preventDefault: () => {} };
+      const dummySetMedicine = () => {};
+      
+      await handleSubmit(syntheticEvent, medicineData, dummySetMedicine);
+      
+      setSuccessMsg({ open: true, message: "✅ Medicine registration submitted successfully!" });
       handleCloseModal();
+      fetchPendingMedicines();
+    } catch (error) {
+      console.error("Registration error:", error);
+      setErrorMsg({ open: true, message: error.message || "❌ Failed to register medicine" });
+    } finally {
+      setInfoMsg({ open: false, message: "" });
     }
   };
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, image: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+
   const handleCardClick = (medicine) => {
     setSelectedMedicine(medicine);
     setDetailsModalOpen(true);
@@ -289,323 +351,380 @@ const ManufacturerDashboard = () => {
 
   const handleOpenSaleModal = (medicine) => {
     setSelectedMedicine(medicine);
+    setPrice(medicine.price || 0);
+    setQuantity(medicine.quantity || 1);
     setSaleModalOpen(true);
   };
-  
 
   const handleCloseSaleModal = () => {
     setSaleModalOpen(false);
     setSelectedMedicine(null);
   };
 
-  const confirmSale = () => {
-    if (selectedMedicine) {
-      setSalesData([...salesData, { ...selectedMedicine, saleDate: new Date().toLocaleDateString() }]);
+  // Update the confirmSale function
+const confirmSale = async () => {
+  if (selectedMedicine) {
+    try {
+      // Check if already in sales
+      const isAlreadyInSales = salesData.some(
+        sale => sale.medicine_id === selectedMedicine.tokenId
+      );
+
+      if (isAlreadyInSales) {
+        setErrorMsg({ 
+          open: true, 
+          message: "This medicine is already in sale!" 
+        });
+        return;
+      }
+
+      // Add to database
+      const newSaleItem = await addMedicineToSale({
+        ...selectedMedicine,
+        price: parseFloat(price),
+        quantity: parseInt(quantity) || 1
+      });
+
+      // Update local state
+      setSalesData([...salesData, newSaleItem]);
       setSaleModalOpen(false);
       setSelectedMedicine(null);
+      setSuccessMsg({ 
+        open: true, 
+        message: "Medicine added to Sale successfully!" 
+      });
+    } catch (error) {
+      console.error('Error adding to sale:', error);
+      setErrorMsg({ 
+        open: true, 
+        message: error.message || "Failed to add medicine to sale" 
+      });
     }
-  };
+  }
+};
+
+
+// Update handleRemoveFromSale function
+const handleRemoveFromSale = async (saleToRemove) => {
+  try {
+    await removeMedicineFromSale(saleToRemove.tokenId);
+    setSalesData(salesData.filter(sale => sale.medicine_id !== saleToRemove.tokenId));
+    setSuccessMsg({ 
+      open: true, 
+      message: "Medicine removed from sale successfully!" 
+    });
+  } catch (error) {
+    console.error('Error removing from sale:', error);
+    setErrorMsg({
+      open: true,
+      message: error.message || "Failed to remove medicine from sale"
+    });
+  }
+};
+
   const handleEditSale = (sale) => {
-    setSelectedMedicine(sale); // Set the selected medicine for editing
-    setOpenModal(true); // Open the modal
+    setSelectedMedicine(sale);
+    setEditModalOpen(true);
   };
 
-  const MedicineDetailsModal = ({ open, onClose, medicine }) => {
-    if (!medicine) return null;
+  // Update handleSaveChanges function
+const handleSaveChanges = async () => {
+  try {
+    const updates = {
+      price: parseFloat(price),
+      quantity: parseInt(quantity) || 1
+    };
 
-    return (
-      <Modal open={open} onClose={onClose}>
-        <Box sx={{ position: "absolute", top: "53%", left: "50%", transform: "translate(-50%, -50%)", width: 400, boxShadow: 24, p: 4, borderRadius: 2 , backgroundColor: "rgba(255, 255, 255, 0.8)",
-                backdropFilter: "blur(10px)"}}>
-          <Typography variant="h6" sx={{ mb: 2 }}>{medicine.name}</Typography>
-          <CardMedia
-            component="img"
-            height="200"
-            image={medicine.image}
-            alt={medicine.name}
-            sx={{ objectFit: "contain", width: "100%", mb: 2 }}
-          />
-          <Typography variant="body1">Type: {medicine.type}</Typography>
-          <Typography variant="body1">Medicine ID: {medicine.id}</Typography>
-          <Typography variant="body1">Batch Number: {medicine.batchNumber || "N/A"}</Typography>
-          <Typography variant="body1">Manufacture Date: {medicine.manufactureDate || "N/A"}</Typography>
-          <Typography variant="body1">Expiry Date: {medicine.expiryDate || "N/A"}</Typography>
-          <Typography variant="body1">Excipients: {medicine.excipients?.join(", ") || "N/A"}</Typography>
-          <Button variant="contained" fullWidth onClick={onClose} sx={{ mt: 2 }}>
-            Close
-          </Button>
-        </Box>
-      </Modal>
+    // Update in database
+    await updateSaleMedicine(selectedMedicine.tokenId, updates);
+
+    // Update local state
+    const updatedSales = salesData.map(sale => 
+      sale.medicine_id === selectedMedicine.tokenId 
+        ? { ...sale, ...updates } 
+        : sale
     );
+    
+    setSalesData(updatedSales);
+    handleCloseEditModal();
+    setSuccessMsg({ open: true, message: "Sale details updated successfully!" });
+  } catch (error) {
+    console.error("Error updating sale details:", error);
+    setErrorMsg({ open: true, message: "Failed to update sale details" });
+  }
+};
+
+  // In ManufacturerDashboard.js
+// In ManufacturerDashboard.js
+const MedicineDetailsModal = ({ 
+  open, 
+  onClose, 
+  medicine, 
+  onAddToSale, 
+  showSaleButton = false,
+  isInSales = false  // Add this prop
+}) => {
+  if (!medicine) return null;
+
+  const handleAddToSaleClick = () => {
+    onClose();
+    onAddToSale(medicine);
   };
-  
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: "sans-serif", backgroundColor: "#ADD8E6" }}>
-      {/* Navbar */}
-      <Box sx={{ width: "100%", bgcolor: "#FFFFFF", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", top: 0, zIndex: 1500, height: "60px", boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-          <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleSidebar} sx={{ backgroundColor: "#FFFFDD", color: "#016A70", borderRadius: "50%", boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.2)" }}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="body1">Home</Typography>
-          <Typography variant="body1">Contact Us</Typography>
-          <Typography variant="body1">About Us</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Image src="/healthcare (1).png" alt="Logo" width={50} height={50} />
-          <Typography variant="h6" sx={{ ml: 1 }}>MediCare</Typography>
+    <Modal open={open} onClose={onClose}>
+      <Box sx={{ 
+        position: "absolute", 
+        top: "55%", 
+        left: "50%", 
+        transform: "translate(-50%, -50%)", 
+        width: "80%", 
+        maxWidth: "800px",
+        maxHeight: "80vh",
+        overflowY: "auto",
+        boxShadow: 24, 
+        p: 4, 
+        borderRadius: 2,
+        backgroundColor: "#ffffff", // Pure white background
+      }}>
+        {/* Close button (X) in top right corner */}
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 16,
+            top: 16,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
+          {medicine.uploadedFiles?.length > 0 && (
+            <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
+              <CardMedia
+                component="img"
+                image={`https://ipfs.io/ipfs/${medicine.uploadedFiles[0].ipfsHash}`}
+                alt={medicine.name}
+                sx={{ 
+                  maxHeight: "300px", 
+                  width: "auto", 
+                  objectFit: "contain",
+                  borderRadius: "8px"
+                }}
+              />
+            </Box>
+          )}
+          <Box sx={{ flex: 2 }}>
+          <MedicineDetails 
+        medicine={medicine} 
+        onAddToSale={handleAddToSaleClick}
+        showSaleButton={showSaleButton}
+        isInSales={isInSales}  // Pass the prop
+      />
+          </Box>
         </Box>
       </Box>
+    </Modal>
+  );
+};
+
+return (
+  <Box sx={{ 
+    display: "flex", 
+    flexDirection: "column", 
+    minHeight: "100vh", 
+    fontFamily: "sans-serif", 
+    backgroundColor: "#ADD8E6",
+    position: 'relative',
+    
+  }}>
+      <NavBar/>
+      {/* Manufacturer Details Section */}
+<Box sx={{ 
+  mt: "80px", 
+  p: 3, 
+  backgroundColor: "#FFFFFF", 
+  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+  mb: 3
+}}>
+  <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold" }}>Manufacturer Details</Typography>
+  
+  {loading.wallet ? (
+  <Box sx={{ display: "flex", justifyContent: "center" }}>
+    <CircularProgress />
+  </Box>
+  ) : !walletAddress ? null : (  // Removed the error message here since we have overlay
+    <Box sx={{ 
+      display: "grid", 
+      gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, 
+      gap: 3 
+    }}>
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Manufacturer Name:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.name}
+        </Typography>
+      </Box>
+      
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Wallet Address:</Typography>
+        <Typography variant="body1" sx={{ 
+          fontFamily: "monospace",
+          wordBreak: "break-word"
+        }}>
+          {walletAddress}
+        </Typography>
+      </Box>
+      
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>License Number:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.licenseNo}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Certification Number:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.certificationNumber}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Date of Issue:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.dateOfIssue}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Email:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.email}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Phone Number:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.phoneNumber}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Physical Address:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.physicalAddress}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Website:</Typography>
+        <Typography variant="body1">
+          {manufacturerDetails.website}
+        </Typography>
+      </Box>
+
+      <Box sx={{ gridColumn: "1 / -1" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Certificate:</Typography>
+        {manufacturerDetails.certificate ? (
+          <Button 
+            variant="outlined" 
+            sx={{ mt: 1 }}
+            onClick={() => window.open(manufacturerDetails.certificate, '_blank')}
+          >
+            View Certificate
+          </Button>
+        ) : (
+          <Typography variant="body1">No certificate available</Typography>
+        )}
+      </Box>
+    </Box>
+  )}
+</Box>
+
 
       {/* Main Content */}
       <Box sx={{ flex: 1, paddingTop: "80px", paddingBottom: "20px", display: "grid", gridTemplateColumns: "1fr", gap: "20px" }}>
         {/* Graph Boxes */}
         <Box sx={{ display: 'flex', justifyContent: 'space-around', gap: 2, padding: "0 20px", marginBottom: "20px" }}>
-          {/* Accepted Medicines - Multi-Ring Donut Chart */}
-          <Box
-            sx={{
-              padding: '15px',
-              borderRadius: '15px',
-              background: 'rgba(255, 255, 255, 0.6)',
-              boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.2)',
-              flex: 1,
-              backdropFilter: "blur(25px) ",
-              WebkitBackdropFilter: "blur(25px) saturate(180%)",
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-5px)',
-                boxShadow: '0px 15px 35px rgba(0, 0, 0, 0.3)',
-              },
-            }}
-          >
-            <Typography variant="h6" sx={{ textAlign: "center", color: "#000000" }}>Accepted Medicines</Typography>
-            {isClient && (
-              <PieChart width={200} height={200}>
-                {acceptedData.map((category, index) => (
-                  <Pie
-                    key={category.name}
-                    data={[
-                      { name: category.name, value: category.value },
-                      { name: "Remaining", value: 100 - category.value },
-                    ]}
-                    cx={100}
-                    cy={100}
-                    innerRadius={30 + index * 15}
-                    outerRadius={45 + index * 15}
-                    startAngle={90}
-                    endAngle={-270}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    <Cell fill={category.color} stroke="white" strokeWidth={3} />
-                    <Cell fill={category.unfilledColor} stroke="white" strokeWidth={3} />
-                  </Pie>
-                ))}
-                <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-              </PieChart>
-            )}
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
-              {acceptedData.map((category) => (
-                <Box key={category.name} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Box sx={{ width: 15, height: 15, backgroundColor: category.color, borderRadius: 2 }}></Box>
-                  <Typography variant="body2" sx={{ color: "#000000" }}>{category.name}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Pending Medicines - Bar Chart */}
-          <Box
-            sx={{
-              padding: '15px',
-              borderRadius: '15px',
-              background: 'rgba(255, 255, 255, 0.6)',
-              boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.2)',
-              flex: 1,
-              backdropFilter: "blur(25px) ",
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-5px)',
-                boxShadow: '0px 15px 35px rgba(0, 0, 0, 0.3)',
-              },
-            }}
-          >
-            <Typography variant="h6" sx={{ textAlign: "center", color: "#000000" }}>Pending Medicines</Typography>
-            <BarChart width={200} height={200} data={pendingData}>
-              <XAxis width={150} dataKey="name" tick={{ fill: "#000000" }} />
-              <YAxis tick={{ fill: "#000000" }} />
-              <Tooltip formatter={(value, name) => [`${value} pending`, name]} />
-              <Bar dataKey="Capsules" fill="#3357FF" name="Capsules" barSize={20} />
-              <Bar dataKey="Tablets" fill="#FFA500" name="Tablets" barSize={20} />
-              <Bar dataKey="Antibiotics" fill="#a812e3" name="Antibiotics" barSize={20} />
-              <Bar dataKey="Drugs" fill="#E91E63" name="Drugs" barSize={20} />
-            </BarChart>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
-              {acceptedData.map((category) => (
-                <Box key={category.name} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Box sx={{ width: 15, height: 15, backgroundColor: category.color, borderRadius: 2 }}></Box>
-                  <Typography variant="body2" sx={{ color: "#000000" }}>{category.name}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Rejected Medicines - Pie Chart */}
-          <Box
-            sx={{
-              padding: '15px',
-              borderRadius: '15px',
-              background: 'rgba(255, 255, 255, 0.6)',
-              boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.2)',
-              flex: 1,
-              backdropFilter: "blur(25px)",
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-5px)',
-                boxShadow: '0px 15px 35px rgba(0, 0, 0, 0.3)',
-              },
-            }}
-          >
-            <Typography variant="h6" sx={{ textAlign: "center", color: "#000000" }}>Rejected Medicines</Typography>
-            <PieChart width={200} height={200}>
-              <Pie
-                data={rejectedData}
-                cx={100}
-                cy={100}
-                innerRadius={40}
-                outerRadius={60}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {rejectedData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={3} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value, name) => [`${value} rejected`, name]} />
-            </PieChart>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
-              {rejectedData.map((category) => (
-                <Box key={category.name} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Box sx={{ width: 15, height: 15, backgroundColor: category.color, borderRadius: 2 }}></Box>
-                  <Typography variant="body2" sx={{ color: "#000000" }}>{category.name}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
+          <AcceptedMedicinesChart data={acceptedMedicines} />
+          <PendingMedicinesChart data={pendingMedicines} />
+          <RejectedMedicinesChart data={rejectedMedicines} />
         </Box>
 
         {/* Tabs for Medicines */}
         <Box sx={{ mt: 2, padding: "0 20px" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Tabs
-  value={activeTab}
-  onChange={handleTabChange}
-  centered
->
-  {/* Pending Tab */}
-  {/* <Tab
-    label="Pending Medicines"
-    value="pending"
-    sx={{
-      fontSize: "1rem",
-      padding: "12px 24px",
-      color: "#000000",
-      fontWeight: activeTab === "pending" ? "bold" : "normal",
-      "&:hover": {
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        borderRadius: "8px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-      },
-    }}
-  /> */}
-
-
-{/* aleeza code */}
-<Tab
-  label="Pending Medicines"
-  value="pending"
-  onClick={async () => {
-    const medicines = await fetchPendingMedicines();
-    setPendingMedicines(medicines); // ✅ Store the data in state
-  }}
-  sx={{
-    fontSize: "1rem",
-    padding: "12px 24px",
-    color: "#000000",
-    fontWeight: activeTab === "pending" ? "bold" : "normal",
-    "&:hover": {
-      backgroundColor: "rgba(255, 255, 255, 0.8)",
-      borderRadius: "8px",
-      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-    },
-  }}
-/>
-
-
-
-
-  {/* Accepted Tab */}
-  <Tab
-    label="Accepted Medicines"
-    value="accepted"
-    sx={{
-      fontSize: "1rem",
-      padding: "12px 24px",
-      color: activeTab === "accepted" ? "#4CAF50" : "#000000",
-      fontWeight: activeTab === "accepted" ? "bold" : "normal",
-      "&:hover": {
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        borderRadius: "8px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-      },
-    }}
-  />
-
-  {/* Rejected Tab */}
-  <Tab
-    label="Rejected Medicines"
-    value="rejected"
-    sx={{
-      fontSize: "1rem",
-      padding: "12px 24px",
-      color: activeTab === "rejected" ? "#F44336" : "#000000",
-      fontWeight: activeTab === "rejected" ? "bold" : "normal",
-      "&:hover": {
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        borderRadius: "8px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-      },
-    }}
-  />
-
-  {/* Sales Tab */}
-  <Tab
-    label="Sales"
-    value="sales"
-    sx={{
-      fontSize: "1rem",
-      padding: "12px 24px",
-      color: activeTab === "sales" ? "#2196F3" : "#000000",
-      fontWeight: activeTab === "sales" ? "bold" : "normal",
-      "&:hover": {
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        borderRadius: "8px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-      },
-    }}
-  />
-</Tabs>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              centered
+            >
+              <Tab
+                label="Pending Medicines"
+                value="pending"
+                sx={{
+                  fontSize: "1rem",
+                  padding: "12px 24px",
+                  color: "#000000",
+                  fontWeight: activeTab === "pending" ? "bold" : "normal",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "8px",
+                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  },
+                }}
+              />
+              <Tab
+                label="Accepted Medicines"
+                value="accepted"
+                sx={{
+                  fontSize: "1rem",
+                  padding: "12px 24px",
+                  color: activeTab === "accepted" ? "#4CAF50" : "#000000",
+                  fontWeight: activeTab === "accepted" ? "bold" : "normal",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "8px",
+                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  },
+                }}
+              />
+              <Tab
+                label="Rejected Medicines"
+                value="rejected"
+                sx={{
+                  fontSize: "1rem",
+                  padding: "12px 24px",
+                  color: activeTab === "rejected" ? "#F44336" : "#000000",
+                  fontWeight: activeTab === "rejected" ? "bold" : "normal",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "8px",
+                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  },
+                }}
+              />
+              <Tab
+                label="Sales"
+                value="sales"
+                sx={{
+                  fontSize: "1rem",
+                  padding: "12px 24px",
+                  color: activeTab === "sales" ? "#2196F3" : "#000000",
+                  fontWeight: activeTab === "sales" ? "bold" : "normal",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "8px",
+                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  },
+                }}
+              />
+            </Tabs>
 
             <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
               Add Medicine
@@ -613,332 +732,368 @@ const ManufacturerDashboard = () => {
           </Box>
 
           {/* Medicine Cards */}
-          {activeTab === "sales" ? (
-  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(240px, 1fr))", gap: 3, mt: 2 }}>
-    {salesData.map((sale) => (
-      <Card key={sale.id} sx={{ width: "100%", height: "340px", position: "relative" , backgroundColor: "rgba(255, 255, 255, 0.5)", }}>
-
-
-        
-        
-        <CardMedia
-          component="img"
-          height="140"
-          image={sale.image}
-          alt={sale.name}
-          sx={{
-            height:200,
-            objectFit: "contain",
-            width: "100%",
-          }}
-        />
-        <CardContent sx={{ textAlign: "center", flexGrow: 1 }}>
-          <Typography variant="h6" sx={{ fontSize: "1rem", color: "#000000" }}>
-            {sale.name}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#000000" }}>
-            Sold on: {sale.saleDate}
-          </Typography>
-        </CardContent>
-        <Button
-          variant="contained"
-          sx={{
-            position: "absolute",
-            bottom: "10px",
-          
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "90%",
-            backgroundColor: "#2196F3",
-            color: "#FFFFFF",
-            fontSize: "0.875rem",
-            '&:hover': { backgroundColor: "#1976D2" },
-          }}
-          onClick={() => handleEditClick(sale)} // Open modal with sale data
-        >
-          Edit
-        </Button>
-      </Card>
-    ))}
-  </Box>
-) : (
-  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(240px, 1fr))", gap: 3, mt: 2 }}>
-    {medicinesData[activeTab].map((medicine) => (
-      <Box key={medicine.id} sx={{ width: "100%", height: "310px", position: "relative" }}>
-        {/* Flipping Card Container */}
-        <Box
-          onMouseEnter={() => setHoveredCard(medicine.id)}
-          onMouseLeave={() => setHoveredCard(null)}
-          onClick={() => handleCardClick(medicine)}
-          sx={{
-            perspective: "1000px",
-            width: "100%",
-            height: "100%",
-            cursor: "pointer",
-            position: "relative",
-          }}
-        >
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              position: "relative",
-              transformStyle: "preserve-3d",
-              transition: "transform 0.6s",
-              transform: hoveredCard === medicine.id ? "rotateY(180deg)" : "rotateY(0deg)",
-            }}
-          >
-            {/* Front of the Card */}
-            <Card
-              sx={{
-                width: "100%",
-                height: "100%",
-                position: "absolute",
-                backfaceVisibility: "hidden",
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-                backdropFilter: "blur(10px)",
-                borderRadius: "12px",
-                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                paddingBottom: "50px",
-                alignItems: "center",
-              }}
-            >
-              <CardMedia
-                component="img"
-                height="140px"
-                image={medicine.image}
-                alt={medicine.name}
-                sx={{
-                  height: 220,
-                  objectFit: "contain",
-                  width: "100%",
-                }}
-              />
-
-              {/* Medicine Name */}
-              <CardContent sx={{ textAlign: "center", flexGrow: 1 }}>
-                <Typography variant="h6" sx={{ fontSize: "1rem", color: "#000000" }}>
-                  {medicine.name}
-                </Typography>
-              </CardContent>
-            </Card>
-
-            {/* Back of the Card */}
-            <Card
-              sx={{
-                width: "100%",
-                height: "100%",
-                position: "absolute",
-                backfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-                backdropFilter: "blur(10px)",
-                borderRadius: "12px",
-                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                p: 2,
-              }}
-            >
-              <Typography variant="body1" sx={{ color: "#000000" }}>
-                {medicineUses[medicine.id] || "No use information available."}
-              </Typography>
-            </Card>
-          </Box>
-        </Box>
-
-        {/* Fixed "Add to Sale" Button - Stays Below Card */}
-        {activeTab === "accepted" && (
-          <Box sx={{ 
-            position: "absolute", 
-            bottom: "8px", 
-            left: "50%", 
-            transform: "translateX(-50%)", 
-            width: "90%", 
-            display: "flex", 
-            justifyContent: "center",
-          }}>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#2196F3",
-                color: "#FFFFFF",
-                fontSize: "0.875rem",
-                width: "100%",
-                '&:hover': { backgroundColor: "#45a049" },
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpenSaleModal(medicine);
-              }}
-            >
-              Add to Sale
-            </Button>
-          </Box>
-        )}
-      </Box>
-    ))}
-  </Box>
-)}
-        </Box>
-      </Box>
-
-      {/* Add to Sale Modal */}
-      <Modal open={saleModalOpen} onClose={handleCloseSaleModal}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 400, bgcolor: "background.paper", boxShadow: 24, p: 4, borderRadius: 2,backgroundColor: "rgba(255, 255, 255, 0.8)" }}>
-          <Typography variant="h6">Confirm Sale</Typography>
-          {selectedMedicine && (
-            <>
-              <CardMedia component="img" height="200" image={selectedMedicine.image} alt={selectedMedicine.name} sx={{ objectFit: "contain", width: "100%", mb: 2 }} />
-              <Typography variant="body1">Medicine: {selectedMedicine.name}</Typography>
-              <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={confirmSale}>
-                Confirm Sale
-              </Button>
-            </>
+          {loading.wallet ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : !walletAddress ? (
+            <Typography sx={{ textAlign: "center", mt: 4 }}>
+              Please connect your wallet to view medicines
+            </Typography>
+          ) : activeTab === "pending" ? (
+            <PendingMedicineCards 
+              medicines={pendingMedicines}
+              loading={loading.pending}
+              onCardClick={handleCardClick} 
+            />
+          ) : activeTab === "accepted" ? (
+            <AcceptedMedicineCards 
+              medicines={acceptedMedicines}
+              loading={loading.accepted}
+              onCardClick={handleCardClick} 
+              onAddToSale={handleOpenSaleModal}
+            />
+          ) : activeTab === "rejected" ? (
+            <RejectedMedicineCards 
+              medicines={rejectedMedicines}
+              loading={loading.rejected}
+              onCardClick={handleCardClick} 
+            />
+          ) : (
+            <SaleMedicineCards 
+              sales={salesData.map(sale => ({
+                ...sale,
+                tokenId: sale.medicine_id,
+                uploadedFiles: sale.image_url ? [{ ipfsHash: sale.image_url.replace('https://ipfs.io/ipfs/', '') }] : []
+              }))} 
+              onEditClick={handleEditSale}
+              onRemoveFromSale={handleRemoveFromSale}
+            />
           )}
-          <Button variant="outlined" fullWidth sx={{ mt: 1 }} onClick={handleCloseSaleModal}>
-            Cancel
-          </Button>
+        </Box>
+      </Box>
+
+      {/* Message Boxes */}
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 2000,
+          pointerEvents: "none",
+        }}
+      >
+        <SuccessMsgBox
+          open={successMsg.open}
+          onClose={() => setSuccessMsg({ open: false, message: "" })}
+          message={successMsg.message}
+        />
+        <ErrorMsgBox
+          open={errorMsg.open}
+          onClose={() => setErrorMsg({ open: false, message: "" })}
+          message={errorMsg.message}
+        />
+        <InfoMsgBox
+          open={infoMsg.open}
+          onClose={() => setInfoMsg({ open: false, message: "" })}
+          message={infoMsg.message}
+        />
+      </Box>  
+      {/* Add this overlay right before the closing </Box> */}
+    {!loading.wallet && !walletAddress && (
+      <Box sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        zIndex: 3000, // Higher than other elements
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        backdropFilter: 'blur(4px)'
+      }}>
+        <LockIcon sx={{ fontSize: 80, mb: 3 }} />
+        <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
+          Access Denied
+        </Typography>
+        <Typography variant="body1" sx={{ maxWidth: '600px', textAlign: 'center', mb: 3 }}>
+          Your account is not approved as a manufacturer or has been rejected by the admin.
+          Please contact the administrator if you believe this is an error.
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="error"
+          onClick={() => window.location.reload()}
+          sx={{ mt: 2 }}
+        >
+          Refresh Page
+        </Button>
+      </Box>
+    )}
+
+    {/* Add this wrapper div to handle the blur and pointer events */}
+    <Box sx={{
+      filter: !loading.wallet && !walletAddress ? 'blur(2px)' : 'none',
+      pointerEvents: !loading.wallet && !walletAddress ? 'none' : 'auto',
+      width: '100%',
+      height: '100%'
+    }}>
+</Box>
+      
+
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box sx={{ 
+          position: "absolute", 
+          top: "55%", 
+          left: "50%", 
+          transform: "translate(-50%, -50%)", 
+          width: "90%", 
+          maxWidth: "900px",
+          maxHeight: "90vh",
+          p: 0,
+          borderRadius: 2,
+          zIndex: 2000 
+        }}>
+          <MedicineForm 
+            onSubmit={async (medicineData) => {
+              try {
+                await handleAddMedicine(medicineData);
+              } catch (error) {
+                console.error("Error:", error);
+                setErrorMsg({ open: true, message: error.message || "❌ Failed to register medicine" });
+              }
+            }}
+            onClose={handleCloseModal}
+            initialValues={{
+              certificate: "",
+              name: "",
+              medicineId: "",
+              batchNumber: "",
+              manufactureDate: "",
+              expiryDate: "",
+              excipients: [""],
+              types: [],
+              description: "",
+              image: "",
+              walletAddress: "",
+            }}
+          />
         </Box>
       </Modal>
 
-      <Modal open={openModal} onClose={handleCloseModal}>
-  <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 400, boxShadow: 0, p: 0, borderRadius: 0, overflowY: 'auto', maxHeight: '80vh' }}>
-    <MedicineForm
-      medicine={selectedMedicine} // Pass selected medicine for editing
-      onSave={handleAddMedicine} // Handle save action
-      onClose={handleCloseModal} // Handle close action
-    />
+      <Modal open={saleModalOpen} onClose={handleCloseSaleModal}>
+  <Box sx={{ 
+    position: "absolute", 
+    top: "55%", 
+    left: "50%", 
+    transform: "translate(-50%, -50%)", 
+    width: 400,
+    bgcolor: "background.paper", 
+    boxShadow: 24, 
+    p: 3,
+    borderRadius: 2,
+    backgroundColor: "#ffffff",
+    zIndex: 1000
+  }}>
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+      <Typography variant="h6">Confirm Sale</Typography>
+      <IconButton onClick={handleCloseSaleModal} size="small">
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </Box>
+    
+    {selectedMedicine && (
+      <>
+        {selectedMedicine.uploadedFiles?.length > 0 && (
+          <CardMedia 
+            component="img" 
+            height="150"
+            image={`https://ipfs.io/ipfs/${selectedMedicine.uploadedFiles[0].ipfsHash}`} 
+            alt={selectedMedicine.name} 
+            sx={{ 
+              objectFit: "contain", 
+              width: "100%", 
+              mb: 2,
+              maxHeight: 200
+            }} 
+          />
+        )}
+        
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Medicine:</strong> {selectedMedicine.name}
+        </Typography>
+        
+        <TextField
+          label="Price ($)"
+          type="number"
+          fullWidth
+          margin="normal"
+          size="small"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          sx={{ mb: 1 }}
+        />
+
+        <TextField
+          label="Quantity"
+          type="number"
+          fullWidth
+          margin="normal"
+          size="small"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          sx={{ mb: 1 }}
+          inputProps={{ min: 1 }}
+        />
+        
+        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+          <Button 
+            variant="contained" 
+            fullWidth 
+            onClick={confirmSale}
+            sx={{ 
+              py: 1,
+              backgroundColor: "#4CAF50",
+              '&:hover': {
+                backgroundColor: "#388E3C"
+              }
+            }}
+          >
+            Confirm
+          </Button>
+        </Box>
+      </>
+    )}
   </Box>
 </Modal>
-
 
 <Modal open={editModalOpen} onClose={handleCloseEditModal}>
   <Box sx={{
     position: "absolute",
-    top: "50%",
+    top: "55%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: 400,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    width: "80%",
+    maxWidth: "500px",
+    maxHeight: "80vh",
+    overflowY: "auto",
     boxShadow: 24,
-    p: 4,
+    p: 3,
     borderRadius: 2,
-    textAlign: "center",
-    backdropFilter: "blur(10px)",
+    backgroundColor: "#ffffff",
+    zIndex: 1000
   }}>
-    <Typography variant="h6" sx={{ mb: 2 }}>
-      Edit Medicine Details
+    {/* Close button in top right corner */}
+    <IconButton
+      aria-label="close"
+      onClick={handleCloseEditModal}
+      sx={{
+        position: 'absolute',
+        right: 16,
+        top: 16,
+        color: (theme) => theme.palette.grey[500],
+      }}
+    >
+      <CloseIcon fontSize="small" />
+    </IconButton>
+
+    <Typography variant="h5" sx={{ mb: 3, textAlign: "center", fontWeight: "bold" }}>
+      Edit Sale Price
     </Typography>
 
-    {/* Price Field */}
-    <TextField
-      label="Price ($)"
-      type="number"
-      fullWidth
-      margin="normal"
-      value={price}
-      onChange={(e) => setPrice(e.target.value)}
-    />
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      {selectedMedicine?.uploadedFiles?.length > 0 && (
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <CardMedia
+            component="img"
+            image={`https://ipfs.io/ipfs/${selectedMedicine.uploadedFiles[0].ipfsHash}`}
+            alt={selectedMedicine.name}
+            sx={{ 
+              maxHeight: "130px",
+              width: "auto",
+              objectFit: "contain",
+              borderRadius: "8px"
+            }}
+          />
+        </Box>
+      )}
 
-    {/* Quantity Control */}
-    <Box sx={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 2,
-      mt: 2
-    }}>
-      <Button 
-        variant="contained" 
-        onClick={() => setQuantity(quantity - 1)} 
-        disabled={quantity <= 1}
-      >
-        -
-      </Button>
-      
-      <Typography variant="h6">{quantity}</Typography>
-      
-      <Button variant="contained" onClick={() => setQuantity(quantity + 1)}>
-        +
-      </Button>
+      <Typography variant="body1" sx={{ textAlign: "center", mb: 0.5}}>
+        <strong>{selectedMedicine?.name}</strong>
+      </Typography>
+
+      <TextField
+        label="Price ($)"
+        type="number"
+        fullWidth
+        size="small"
+        margin="normal"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+        InputProps={{
+          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        }}
+      />
+      <TextField
+        label="Quantity"
+        type="number"
+        fullWidth
+        size="small"
+        margin="normal"
+        value={quantity}
+        onChange={(e) => setQuantity(e.target.value)}
+        inputProps={{ min: 1 }}
+      />
+      <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          onClick={handleCloseEditModal}
+          sx={{ py: 1 }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          variant="contained" 
+          fullWidth 
+          onClick={handleSaveChanges}  // Changed from handleCloseEditModal to handleSaveChanges
+          sx={{ 
+            py: 1,
+            backgroundColor: "#4CAF50",
+            '&:hover': {
+              backgroundColor: "#388E3C"
+            }
+          }}
+        >
+          Save Changes
+        </Button>
+      </Box>
     </Box>
-
-    {/* Save Button */}
-    <Button 
-      variant="contained" 
-      fullWidth 
-      sx={{ mt: 3 }} 
-      onClick={handleCloseEditModal}
-    >
-      Save Changes
-    </Button>
   </Box>
 </Modal>
 
-
-
-      {/* Add Medicine Modal */}
-      <Modal open={openModal} onClose={handleCloseModal}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 400, boxShadow: 0, p: 0, borderRadius: 0, overflowY: 'auto', maxHeight: '80vh' }}>
-          <MedicineForm />
-        </Box>
-      </Modal>
-
-      {/* Medicine Details Modal */}
-      <MedicineDetailsModal
-        open={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
-        medicine={selectedMedicine}
-        
-      />
+<MedicineDetailsModal
+  open={detailsModalOpen}
+  onClose={() => setDetailsModalOpen(false)}
+  medicine={selectedMedicine}
+  onAddToSale={handleOpenSaleModal}
+  showSaleButton={activeTab === "accepted"}
+  isInSales={selectedMedicine ? 
+    salesData.some(sale => sale.tokenId === selectedMedicine.tokenId) : 
+    false
+  }
+/>
     </Box>
   );
 };
 
-// const MedicineForm = ({ medicine, onSave, onClose }) => {
-//   const [formData, setFormData] = useState(medicine || { name: "", type: "", image: "" });
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     onSave(formData);
-//   };
-
-//   return (
-//     <Box component="form" onSubmit={handleSubmit}>
-//       <TextField
-//         label="Name"
-//         value={formData.name}
-//         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-//         fullWidth
-//         margin="normal"
-//       />
-//       <TextField
-//         label="Type"
-//         value={formData.type}
-//         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-//         fullWidth
-//         margin="normal"
-//       />
-//       <TextField
-//         label="Image URL"
-//         value={formData.image}
-//         onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-//         fullWidth
-//         margin="normal"
-//       />
-//       <Button type="submit" variant="contained" color="primary" fullWidth>
-//         Save
-//       </Button>
-//       <Button onClick={onClose} variant="outlined" color="secondary" fullWidth sx={{ mt: 1 }}>
-//         Cancel
-//       </Button>
-//     </Box>
-//   );
-// };
 export default ManufacturerDashboard;

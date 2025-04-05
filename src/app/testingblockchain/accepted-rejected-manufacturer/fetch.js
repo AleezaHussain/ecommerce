@@ -9,7 +9,7 @@ const ManufacturerNFTABI = ManufacturerNFTStorage.abi;
  * @param {string} status - The status to filter manufacturers by ("Pending", "Approved", "Rejected")
  * @returns {Array} - List of manufacturers with full details based on the provided status.
  */
-async function getManufacturersByStatus(status) {
+export async function getManufacturersByStatus(status) {
   if (!window.ethereum) {
     alert("❌ MetaMask not detected. Please install MetaMask.");
     return [];

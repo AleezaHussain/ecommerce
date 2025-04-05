@@ -19,7 +19,7 @@ import Image from "next/image";
 import { ErrorMsgBox, SuccessMsgBox } from "../components/MsgBox"; // Import the message box components
 import { Visibility, VisibilityOff } from "@mui/icons-material"; // Import eye icons
 import { useRouter } from "next/navigation"; // Import useRouter for navigation
-
+import NavBar from "../components/NavBar";
 const AdminLoginPage = () => {
   // State for email and password
   const [email, setEmail] = useState("");
@@ -153,41 +153,7 @@ const AdminLoginPage = () => {
         </video>
       </Box>
 
-      {/* Navbar */}
-      <Box
-        sx={{
-          width: "100%",
-          bgcolor: "#004b8d",
-          padding: "10px 20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          position: "fixed",
-          top: 0,
-          zIndex: 1500,
-          height: "60px",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-          <Typography variant="body1" sx={{ cursor: "pointer", color: "#ffffff" }}>
-            Home
-          </Typography>
-          <Typography variant="body1" sx={{ cursor: "pointer", color: "#ffffff" }}>
-            Contact Us
-          </Typography>
-          <Typography variant="body1" sx={{ cursor: "pointer", color: "#ffffff" }}>
-            About Us
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Image src="/healthcare (1).png" alt="Logo" width={50} height={50} />
-          <Typography variant="h6" sx={{ ml: 1, color: "#ffffff" }}>
-            MediCare
-          </Typography>
-        </Box>
-      </Box>
-
+      <NavBar />
       {/* Main Content */}
       <Container
         maxWidth="md"
@@ -210,8 +176,8 @@ const AdminLoginPage = () => {
             maxWidth: "450px",
             width: "100%",
             p: 4,
-            bgcolor: "rgba(255, 255, 255, 0.15)",
-            backdropFilter: "blur(15px)",
+            bgcolor: "rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(50px)",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",

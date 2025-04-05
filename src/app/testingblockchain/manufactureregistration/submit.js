@@ -5,7 +5,7 @@ import ManufacturerNFTStorage from "../../../../artifacts/blockchain/contracts/m
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MANUFACTURE_CONTRACT_ADDRESS;
 const ManufacturerNFTABI = ManufacturerNFTStorage.abi;
 
-export async function storeManufacturerData(formData) {
+export async function storeManufacturerData(formData, setInfoMsgCallback) {
   try {
     console.log("Uploading data to IPFS...");
 
@@ -25,29 +25,23 @@ export async function storeManufacturerData(formData) {
     const pdfCID = await uploadPDFFromURLToPinata(URL.createObjectURL(formData.pdf));
 
     console.log("✅ IPFS Upload Complete");
-    console.log("📂 JSON CID:", jsonCID);
-    console.log("📄 PDF CID:", pdfCID);
+    setInfoMsgCallback({ open: true, message: "Please confirm transaction in MetaMask..." });
 
-    // ✅ FIX: Proper CID validation before storing on blockchain
+    // Validate CIDs
     function isValidCID(cid) {
-      const cidRegex = /^[a-zA-Z0-9]{46,}$/; // Matches IPFS CIDv0 and CIDv1 formats
+      const cidRegex = /^[a-zA-Z0-9]{46,}$/;
       return cidRegex.test(cid);
     }
 
-    if (!isValidCID(jsonCID)) {
-      console.error("❌ Invalid JSON CID format!", jsonCID);
-      return;
+    if (!isValidCID(jsonCID) || !isValidCID(pdfCID)) {
+      throw new Error("Invalid IPFS CID format");
     }
 
-    if (!isValidCID(pdfCID)) {
-      console.error("❌ Invalid PDF CID format!", pdfCID);
-      return;
-    }
-
-    await storeOnBlockchain(formData.walletAddress, jsonCID, pdfCID);
+    await storeOnBlockchain(formData.walletAddress, jsonCID, pdfCID, setInfoMsgCallback);
   } catch (error) {
     console.error("❌ Error storing data:", error);
-    throw new Error("Failed to store manufacturer data");
+    setInfoMsgCallback({ open: false, message: "" });
+    throw error;
   }
 }
 
@@ -72,7 +66,6 @@ async function storeOnBlockchain(walletAddress, jsonCID, pdfCID) {
 
     await tx.wait();
     console.log("✅ Transaction Confirmed:", tx.hash);
-    alert("✅ Manufacturer stored on blockchain!");
   } catch (error) {
     console.error("❌ Error storing on blockchain:", error);
     throw new Error("Failed to store on blockchain");

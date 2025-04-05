@@ -35,52 +35,103 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Validate file type
-    if (file.mimetype !== "application/pdf") {
-      return res.status(400).json({ message: "Please upload a valid PDF file." });
+    // Check if file is PDF or image
+    const isPDF = file.mimetype === "application/pdf";
+    const isImage = file.mimetype.startsWith("image/");
+
+    if (!isPDF && !isImage) {
+      return res.status(400).json({ 
+        message: "Please upload either a PDF file or an image (JPEG, PNG, etc.)" 
+      });
     }
 
-    console.log("🔍 Reading PDF file...");
     const dataBuffer = await fs.promises.readFile(file.filepath);
-    console.log("📏 PDF file size:", dataBuffer.length, "bytes");
+    console.log("📏 File size:", dataBuffer.length, "bytes");
 
-    console.log("🔍 Extracting text from PDF...");
-    const pdfData = await pdfParse(dataBuffer);
-    let extractedText = pdfData.text.trim();
+    let extractedText = "";
+    let imageBase64 = "";
 
-    if (!extractedText) {
-      return res.status(400).json({ message: "Failed to extract text from PDF" });
+    if (isPDF) {
+      console.log("🔍 Extracting text from PDF...");
+      const pdfData = await pdfParse(dataBuffer);
+      extractedText = pdfData.text.trim();
+
+      if (!extractedText) {
+        return res.status(400).json({ message: "Failed to extract text from PDF" });
+      }
+    } else if (isImage) {
+      console.log("🖼️ Processing image file...");
+      imageBase64 = dataBuffer.toString("base64");
     }
 
-    console.log("📡 Sending extracted text to Qwen AI...");
+    console.log("📡 Sending to Qwen2.5-VL-72B-Instruct...");
+    
+    let messages = [];
+    
+    if (isPDF) {
+      messages = [
+        {
+          role: "system",
+          content: "You are an AI assistant trained to extract key details from a manufacturer certificate.",
+        },
+        {
+          role: "user",
+          content: `Extract the following details in valid JSON format:
+          - manufacturer_name
+          - license_number
+          - certificate_number
+          - date_of_issue (YYYY-MM-DD)
+          - address
+
+          Return only the JSON object, without markdown formatting. Here is the extracted text:
+          ${extractedText}`,
+        },
+      ];
+    } else {
+      messages = [
+        {
+          role: "system",
+          content: "You are an AI assistant trained to extract key details from a manufacturer certificate image.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Extract the following details from this certificate image in valid JSON format:
+              - manufacturer_name
+              - license_number
+              - certificate_number
+              - date_of_issue (YYYY-MM-DD)
+              - address
+              
+              Return only the JSON object, without markdown formatting.`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${file.mimetype};base64,${imageBase64}`
+              }
+            }
+          ]
+        }
+      ];
+    }
+
     const qwenResponse = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "qwen/qwen-2-7b-instruct:free",
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI assistant trained to extract key details from a manufacturer certificate.",
-          },
-          {
-            role: "user",
-            content: `Extract the following details in **valid JSON format**:
-            - manufacturer_name
-            - license_number
-            - certificate_number
-            - date_of_issue (YYYY-MM-DD)
-            - address
-
-            Return only the JSON object, **without markdown formatting**. Here is the extracted text:
-            ${extractedText}`,
-          },
-        ],
-        max_tokens: 150,
+        model: "qwen/qwen2.5-vl-72b-instruct:free",
+        messages: messages,
+        max_tokens: 500,
+        temperature: 0.0,
       },
       {
         headers: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
+          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+          "X-Title": process.env.NEXT_PUBLIC_SITE_NAME || "My App",
         },
       }
     );
@@ -89,7 +140,6 @@ export default async function handler(req, res) {
     const cleanedJson = structuredData.replace(/```json|```/g, "").trim();
     const jsonData = JSON.parse(cleanedJson);
 
-    // Fixing Date Format
     if (jsonData.date_of_issue) {
       const date = new Date(jsonData.date_of_issue);
       if (!isNaN(date.getTime())) {
@@ -97,17 +147,20 @@ export default async function handler(req, res) {
       }
     }
 
-    // Convert PDF to Base64
-    const certificationBytea = dataBuffer.toString("base64");
+    const fileBytea = dataBuffer.toString("base64");
 
-    console.log("📡 Returning extracted data and Base64 PDF...");
+    console.log("📡 Returning extracted data and Base64 file...");
     return res.status(200).json({
       message: "Certificate processed successfully",
       extractedData: jsonData,
-      certificationBytea, // Send as Base64
+      fileBytea,
+      fileType: isPDF ? "pdf" : "image",
     });
   } catch (error) {
-    console.error("❌ Unexpected error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("❌ Unexpected error:", error?.response?.data || error);
+    return res.status(500).json({ 
+      message: "Internal Server Error",
+      error: error.message 
+    });
   }
 }

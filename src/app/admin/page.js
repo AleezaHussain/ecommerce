@@ -8,20 +8,20 @@ import Button from "@mui/material/Button";
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState("pendingManufacturers");
-  const [activeDashboard, setActiveDashboard] = useState(null); // Initially no dashboard is selected
+  const [activeDashboard, setActiveDashboard] = useState(null);
 
   const handleSectionChange = (section) => {
-    console.log("Switching to section:", section); // Debugging line
+    console.log("Switching to section:", section);
     setActiveSection(section);
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
+    <Box sx={{ display: "flex", height: "100vh", width: "100%" }}>
       {/* Sidebar */}
       <Sidebar handleSectionChange={handleSectionChange} activeDashboard={activeDashboard} />
 
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, p: 3, marginLeft: "240px" }}>
+      <Box sx={{ flexGrow: 1, p: 3, marginLeft: "240px", width: "100%" }}>
         {/* Render buttons only if no dashboard is selected */}
         {!activeDashboard && (
           <Box sx={{ display: "flex", gap: 2, justifyContent: "center", marginTop: "20px" }}>

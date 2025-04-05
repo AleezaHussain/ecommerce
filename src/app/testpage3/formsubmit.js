@@ -34,7 +34,7 @@ export const handleSubmit = async (e, medicine, setMedicine) => {
   }
 
   console.log(`🎉 Medicine NFT Minted! Token ID: ${tokenId}`);
-  alert(`Medicine successfully stored on blockchain!\nToken ID: ${tokenId}`);
+  // alert(`Medicine successfully stored on blockchain!\nToken ID: ${tokenId}`);
 
   // ✅ Reset form fields (except wallet address)
   setMedicine((prev) => ({

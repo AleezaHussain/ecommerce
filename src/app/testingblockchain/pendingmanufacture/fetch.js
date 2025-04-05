@@ -105,7 +105,6 @@ export async function updateManufacturerStatus(tokenId, newStatus) {
     const receipt = await tx.wait();
     console.log("✅ Transaction Mined:", receipt);
 
-    alert(`Manufacturer ${tokenId} successfully updated to ${newStatus}`);
     return true;
   } catch (error) {
     console.error("❌ Blockchain transaction failed:", error);

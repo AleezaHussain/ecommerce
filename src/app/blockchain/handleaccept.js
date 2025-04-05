@@ -1,7 +1,7 @@
 import { getManufacturerById } from "../../../lib/getmanufacturer";
 import { uploadJSONToPinata, uploadPDFFromURLToPinata } from "../../../pages/api/ipfs/uploadToIPFS";
 import { storeManufacturerData } from "../blockchain/blockchain";
-import { acceptManufacturer } from "../../../lib/admindatafetch";
+// import { acceptManufacturer } from "../../../lib/admindatafetch";
 
 const handleAccept = async (id, setAcceptedManufacturers, setPendingManufacturers) => {
   try {

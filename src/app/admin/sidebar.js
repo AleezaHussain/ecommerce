@@ -12,22 +12,21 @@ import {
 import Image from "next/image";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import FactoryIcon from "@mui/icons-material/Factory"; // Icon for Manufacturers
-import MedicalServicesIcon from "@mui/icons-material/MedicalServices"; // Icon for Medicines
-import PeopleIcon from "@mui/icons-material/People"; // Icon for Users
-import CheckCircleIcon from "@mui/icons-material/CheckCircle"; // Icon for Accepted
-import PendingIcon from "@mui/icons-material/Pending"; // Icon for Pending
-import CancelIcon from "@mui/icons-material/Cancel"; // Icon for Rejected
-import QrCodeIcon from "@mui/icons-material/QrCode"; // Icon for QR Codes
-import PersonIcon from "@mui/icons-material/Person"; // Icon for User Profiles
+import FactoryIcon from "@mui/icons-material/Factory";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import PeopleIcon from "@mui/icons-material/People";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PendingIcon from "@mui/icons-material/Pending";
+import CancelIcon from "@mui/icons-material/Cancel";
+import QrCodeIcon from "@mui/icons-material/QrCode";
+import PersonIcon from "@mui/icons-material/Person";
+import AnalyticsIcon from "@mui/icons-material/Analytics"; // Import Analytics icon
 
 const Sidebar = ({ handleSectionChange, activeDashboard }) => {
-  // State to manage dropdown open/close
   const [openManufacturers, setOpenManufacturers] = useState(false);
   const [openMedicines, setOpenMedicines] = useState(false);
   const [openUsers, setOpenUsers] = useState(false);
 
-  // Toggle dropdowns
   const handleManufacturersClick = () => {
     setOpenManufacturers(!openManufacturers);
   };
@@ -46,11 +45,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
         position: "fixed",
         top: "60px",
         left: 0,
-        width: "240px",
+        width: "220px",
         height: "calc(100vh - 60px)",
         bgcolor: "#EEF2F6",
         zIndex: 1400,
-        overflowY: "auto", // Enable scrolling if content overflows
+        overflowY: "auto",
       }}
     >
       {/* Sidebar Content */}
@@ -76,11 +75,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
             sx={{
               "&:hover": {
                 bgcolor: "#B2EBF2",
-                borderRadius: "8px", // Rounded borders on hover
+                borderRadius: "8px",
               },
             }}
           >
-            <FactoryIcon sx={{ mr: 2, color: "#016A70" }} /> {/* Icon */}
+            <FactoryIcon sx={{ mr: 2, color: "#016A70" }} />
             <ListItemText primary="Manufacturers" />
             {openManufacturers ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
@@ -94,11 +93,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <CheckCircleIcon sx={{ mr: 2, color: "#2E7D32" }} /> {/* Icon */}
+                <CheckCircleIcon sx={{ mr: 2, color: "#2E7D32" }} />
                 <ListItemText primary="Accepted" />
               </ListItemButton>
             </ListItem>
@@ -108,11 +107,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <PendingIcon sx={{ mr: 2, color: "#EF6C00" }} /> {/* Icon */}
+                <PendingIcon sx={{ mr: 2, color: "#EF6C00" }} />
                 <ListItemText primary="Pending" />
               </ListItemButton>
             </ListItem>
@@ -122,12 +121,27 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <CancelIcon sx={{ mr: 2, color: "#D32F2F" }} /> {/* Icon */}
+                <CancelIcon sx={{ mr: 2, color: "#D32F2F" }} />
                 <ListItemText primary="Rejected" />
+              </ListItemButton>
+            </ListItem>
+            {/* Analytics for Manufacturers */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => handleSectionChange("manufacturerAnalytics")}
+                sx={{
+                  "&:hover": {
+                    bgcolor: "#B2EBF2",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <AnalyticsIcon sx={{ mr: 2, color: "#016A70" }} />
+                <ListItemText primary="Analytics" />
               </ListItemButton>
             </ListItem>
           </List>
@@ -140,11 +154,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
             sx={{
               "&:hover": {
                 bgcolor: "#B2EBF2",
-                borderRadius: "8px", // Rounded borders on hover
+                borderRadius: "8px",
               },
             }}
           >
-            <MedicalServicesIcon sx={{ mr: 2, color: "#016A70" }} /> {/* Icon */}
+            <MedicalServicesIcon sx={{ mr: 2, color: "#016A70" }} />
             <ListItemText primary="Medicines" />
             {openMedicines ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
@@ -158,11 +172,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <CheckCircleIcon sx={{ mr: 2, color: "#2E7D32" }} /> {/* Icon */}
+                <CheckCircleIcon sx={{ mr: 2, color: "#2E7D32" }} />
                 <ListItemText primary="Accepted" />
               </ListItemButton>
             </ListItem>
@@ -172,11 +186,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <PendingIcon sx={{ mr: 2, color: "#EF6C00" }} /> {/* Icon */}
+                <PendingIcon sx={{ mr: 2, color: "#EF6C00" }} />
                 <ListItemText primary="Pending" />
               </ListItemButton>
             </ListItem>
@@ -186,12 +200,27 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <CancelIcon sx={{ mr: 2, color: "#D32F2F" }} /> {/* Icon */}
+                <CancelIcon sx={{ mr: 2, color: "#D32F2F" }} />
                 <ListItemText primary="Rejected" />
+              </ListItemButton>
+            </ListItem>
+            {/* Analytics for Medicines */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => handleSectionChange("medicineAnalytics")}
+                sx={{
+                  "&:hover": {
+                    bgcolor: "#B2EBF2",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <AnalyticsIcon sx={{ mr: 2, color: "#016A70" }} />
+                <ListItemText primary="Analytics" />
               </ListItemButton>
             </ListItem>
           </List>
@@ -204,11 +233,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
             sx={{
               "&:hover": {
                 bgcolor: "#B2EBF2",
-                borderRadius: "8px", // Rounded borders on hover
+                borderRadius: "8px",
               },
             }}
           >
-            <PeopleIcon sx={{ mr: 2, color: "#016A70" }} /> {/* Icon */}
+            <PeopleIcon sx={{ mr: 2, color: "#016A70" }} />
             <ListItemText primary="Users" />
             {openUsers ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
@@ -222,11 +251,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <QrCodeIcon sx={{ mr: 2, color: "#016A70" }} /> {/* Icon */}
+                <QrCodeIcon sx={{ mr: 2, color: "#016A70" }} />
                 <ListItemText primary="QR Codes" />
               </ListItemButton>
             </ListItem>
@@ -236,11 +265,11 @@ const Sidebar = ({ handleSectionChange, activeDashboard }) => {
                 sx={{
                   "&:hover": {
                     bgcolor: "#B2EBF2",
-                    borderRadius: "8px", // Rounded borders on hover
+                    borderRadius: "8px",
                   },
                 }}
               >
-                <PersonIcon sx={{ mr: 2, color: "#016A70" }} /> {/* Icon */}
+                <PersonIcon sx={{ mr: 2, color: "#016A70" }} />
                 <ListItemText primary="User Profiles" />
               </ListItemButton>
             </ListItem>

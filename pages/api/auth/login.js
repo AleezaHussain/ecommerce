@@ -1,7 +1,7 @@
 
 import { supabase } from '../../../lib/supabaseClientanon';
 
-import { supabase } from '../../../lib/supabaseClientservice';
+// import { supabase } from '../../../lib/supabaseClientservice';
 
 
 import bcrypt from 'bcryptjs';
