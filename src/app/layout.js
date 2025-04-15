@@ -1,26 +1,25 @@
+// app/layout.js
 import './globals.css';
+import { Inter } from 'next/font/google';
+import ClientProviders from './ClientProviders';
+import { CartProvider } from './context/CartContext';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'PharmaGuard 24/7',
+  description: 'Your trusted online pharmacy',
+};
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-        />
-      </head>
-      <body style={{ fontFamily: 'Arial, sans-serif' }}>
-        <header>
-          {/* <nav>
-            <a href="/">Home</a> |
-            <a href="/manufacturer">Manufacturer Registration</a> ✅ Updated link
-          </nav> */}
-        </header>
-
-        <main>
-          {children}
-        </main>
-
+      <body className={inter.className}>
+        <CartProvider>
+          <ClientProviders>
+            {children}
+          </ClientProviders>
+        </CartProvider>
       </body>
     </html>
   );

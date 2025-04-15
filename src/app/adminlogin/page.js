@@ -1,4 +1,4 @@
-"use client"; // Ensure this is a Client Component
+"use client";
 import React, { useState } from "react";
 import {
   Box,
@@ -6,129 +6,85 @@ import {
   TextField,
   Button,
   Container,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  InputLabel,
-  FormControl,
-  IconButton,
+  Grid,
+  Paper,
   InputAdornment,
+  IconButton,
+  FormControl,
+  Link
 } from "@mui/material";
 import Image from "next/image";
-import { ErrorMsgBox, SuccessMsgBox } from "../components/MsgBox"; // Import the message box components
-import { Visibility, VisibilityOff } from "@mui/icons-material"; // Import eye icons
-import { useRouter } from "next/navigation"; // Import useRouter for navigation
+import { ErrorMsgBox, SuccessMsgBox } from "../components/MsgBox";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 import NavBar from "../components/NavBar";
+import { FooterSection } from "../userstore/sections/FooterSection";
+
 const AdminLoginPage = () => {
-  // State for email and password
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // State for error messages
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
-  // State for modal visibility and message
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
-
-  // State for success and error message boxes
+  const [showPassword, setShowPassword] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [errorOpen, setErrorOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  // State for showing/hiding password
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Router for navigation
   const router = useRouter();
 
-  // Toggle password visibility
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-  // Handle form submission
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Reset error messages
     setEmailError("");
     setPasswordError("");
 
-    // Validate email and password
     if (!email || !password) {
-      let errorMessage = "";
-      if (!email) errorMessage += "Email is required.\n";
-      if (!password) errorMessage += "Password is required.\n";
-      setModalMessage(errorMessage);
-      setIsModalOpen(true);
+      setErrorMessage(email ? "Password is required" : "Email is required");
+      setErrorOpen(true);
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError("❌ Please enter a valid email address.");
+      setEmailError("Please enter a valid email address");
       return;
     }
 
     try {
-      // Call the backend API route
       const response = await fetch("/api/auth/alogin", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "An error occurred");
-      }
+      if (!response.ok) throw new Error(data.message || "Login failed");
 
-      // If login is successful
       setSuccessMessage("Login successful! Redirecting...");
       setSuccessOpen(true);
-
-      // Redirect to admin dashboard after 2 seconds
-      setTimeout(() => {
-        router.push("/admin"); // Redirect to /admin/page.js
-      }, 2000);
+      setTimeout(() => router.push("/admin"), 2000);
     } catch (error) {
-      // Handle specific error message for invalid credentials
-      if (error.message === "Invalid email or password") {
-        setErrorMessage("Invalid email or password. Please try again.");
-      } else {
-        setErrorMessage("An error occurred. Please try again.");
-      }
+      setErrorMessage(error.message === "Invalid email or password" 
+        ? "Invalid credentials" 
+        : "An error occurred");
       setErrorOpen(true);
     }
   };
 
-  // Close the modal
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
   return (
     <>
-      {/* Success Message Box */}
       <Box sx={{ zIndex: 2000, position: "fixed", top: 0, left: 0, width: "100%" }}>
         <SuccessMsgBox
           open={successOpen}
           onClose={() => setSuccessOpen(false)}
           message={successMessage}
-          showCloseButton={false} // Add this prop to hide the close button
+          showCloseButton={false}
         />
-      </Box>
-
-      {/* Error Message Box */}
-      <Box sx={{ zIndex: 2000, position: "fixed", top: 0, left: 0, width: "100%" }}>
         <ErrorMsgBox
           open={errorOpen}
           onClose={() => setErrorOpen(false)}
@@ -136,117 +92,229 @@ const AdminLoginPage = () => {
         />
       </Box>
 
-      {/* Background Video */}
+      <NavBar />
+
       <Box
         sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: -1,
-          overflow: "hidden",
-        }}
-      >
-        <video autoPlay loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }}>
-          <source src="/videos/video.mp4" type="video/mp4" />
-        </video>
-      </Box>
-
-      <NavBar />
-      {/* Main Content */}
-      <Container
-        maxWidth="md"
-        sx={{
+          minHeight: "100vh",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          mt: "80px",
+          flexDirection: "column",
+          backgroundColor: "#f5f7fa",
+          pt: "110px",
+          pb: 6,
         }}
       >
+        {/* Hero Section */}
         <Box
-          sx={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            boxShadow: 5,
-            borderRadius: 3,
-            maxWidth: "450px",
-            width: "100%",
-            p: 4,
-            bgcolor: "rgba(255, 255, 255, 0.2)",
-            backdropFilter: "blur(50px)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h5" gutterBottom sx={{ color: "#ffffff", fontWeight: "bold" }}>
-            Admin Login
-          </Typography>
+  sx={{
+    width: "100%",
+    height: { xs: "300px", md: "300px" },
+    position: "relative",
+    mb: 6,
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    textAlign: "center",
+  }}
+>
+  {/* Background Video */}
+  <Box
+    component="video"
+    autoPlay
+    loop
+    muted
+    playsInline
+    sx={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      zIndex: 0,
+    }}
+  >
+    <source src="/admin-bg.mp4" type="video/mp4" />
+    {/* Fallback image if video doesn't load */}
+    <Box
+      component={Image}
+      src="/admin-hero-fallback.jpg"
+      alt="Admin Portal Background"
+      layout="fill"
+      objectFit="cover"
+    />
+  </Box>
+  
+  {/* Dark overlay */}
+  <Box
+    sx={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0, 0, 0, 0.47)",
+      zIndex: 1,
+    }}
+  />
+  
+  {/* Content */}
+  <Box sx={{ position: "relative", zIndex: 2, px: 3, maxWidth: "800px" }}>
+    <Typography 
+      variant="h2" 
+      sx={{ 
+        fontWeight: 700, 
+        mb: 2,
+        fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
+        textShadow: "0 2px 4px rgba(0,0,0,0.3)"
+      }}
+    >
+      Admin Portal
+    </Typography>
+    <Typography 
+      variant="h5"
+      sx={{
+        fontSize: { xs: "1.25rem", md: "1.5rem" },
+        textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+      }}
+    >
+      Secure access to system administration
+    </Typography>
+  </Box>
+</Box>
 
-          {/* Email Field */}
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <TextField
-              fullWidth
-              placeholder="Email"
-              variant="outlined"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={!!emailError}
-              sx={{ 
-                bgcolor: "rgba(255, 255, 255, 0.9)", 
-                borderRadius: "8px",
-              }}
-            />
-            {/* Display error message as plain text */}
-            {emailError && (
-              <Typography sx={{ color: "white", mt: 1, fontSize: "0.875rem" }}>
-                {emailError}
-              </Typography>
-            )}
-          </FormControl>
+        {/* Login Form Section */}
+        <Container maxWidth="md">
+          <Grid container spacing={6}>
+            <Grid item xs={12} md={6}>
+              <Box
+                component="form"
+                onSubmit={handleLogin}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 3,
+                }}
+              >
+                <Typography variant="h4" sx={{ fontWeight: 600, color: "#002F6C" }}>
+                  Admin Login
+                </Typography>
 
-          {/* Password Field */}
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <TextField
-              fullWidth
-              placeholder="Password"
-              type={showPassword ? "text" : "password"}
-              variant="outlined"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={!!passwordError}
-              helperText={passwordError}
-              sx={{ bgcolor: "rgba(255, 255, 255, 0.9)", borderRadius: "8px" }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={handleTogglePasswordVisibility}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+                <FormControl fullWidth>
+                  <TextField
+                    label="Email"
+                    variant="outlined"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={!!emailError}
+                    helperText={emailError}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "#002F6C",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#002F6C",
+                        },
+                      },
+                    }}
+                  />
+                </FormControl>
 
-          {/* Login Button */}
-          <Button
-            variant="contained"
-            onClick={handleLogin}
-            sx={{ mt: 1, width: "80%", borderRadius: "15px", fontSize: "0.85rem", padding: "6px" }}
-          >
-            Login
-          </Button>
-        </Box>
-      </Container>
+                <FormControl fullWidth>
+                  <TextField
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    variant="outlined"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    error={!!passwordError}
+                    helperText={passwordError}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={handleTogglePasswordVisibility}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "#002F6C",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#002F6C",
+                        },
+                      },
+                    }}
+                  />
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    backgroundColor: "#002F6C",
+                    "&:hover": { backgroundColor: "#001A3A" },
+                    py: 1.5,
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  Login
+                </Button>
+
+                
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 4,
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: "#002F6C" }}>
+                  System Requirements
+                </Typography>
+                <Box component="ul" sx={{ pl: 3, mb: 3 }}>
+                  <Typography component="li" sx={{ mb: 1 }}>
+                    Use your authorized admin credentials
+                  </Typography>
+                  <Typography component="li" sx={{ mb: 1 }}>
+                    Ensure you're on a secure network
+                  </Typography>
+                  <Typography component="li" sx={{ mb: 1 }}>
+                    Two-factor authentication may be required
+                  </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  For security assistance, contact:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  support@pharmaguard.com
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  0317-1719452
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+      <FooterSection/>
     </>
   );
 };

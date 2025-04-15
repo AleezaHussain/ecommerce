@@ -1,201 +1,147 @@
 "use client";
 import { useState } from "react";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
+import { 
+  Box, Card, CardContent, CardMedia, 
+  Typography, Button, Chip, Stack 
+} from "@mui/material";
 
 const SaleMedicineCards = ({ sales, onEditClick, onRemoveFromSale }) => {
-  const [hoveredCard, setHoveredCard] = useState(null);
-
   if (sales.length === 0) {
     return (
-      <Typography sx={{ textAlign: "center", mt: 4 }}>
-        No sales found
-      </Typography>
+      <Box sx={{ 
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '200px',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
+        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+          No sales found
+        </Typography>
+      </Box>
     );
   }
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "repeat(5, minmax(240px, 1fr))",
-        gap: 3,
-      }}
-    >
+    <Box sx={{ 
+      display: 'grid',
+      gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
+      gap: '24px'
+    }}>
       {sales.map((sale) => {
-        // Updated to use medicine_id instead of tokenId
-        const uniqueKey = sale.medicine_id
-          ? `sale-${sale.medicine_id}`
-          : `sale-${sale.name}-${sale.saleDate || new Date().toISOString()}-${Math.random()
-              .toString(36)
-              .substr(2, 9)}`;
-
-        // Safely handle price formatting
         const formattedPrice = sale.price
-          ? typeof sale.price === "number"
+          ? typeof sale.price === 'number'
             ? sale.price.toFixed(2)
             : parseFloat(sale.price).toFixed(2)
           : "N/A";
 
         return (
-          <Box
-            key={uniqueKey}
-            sx={{ width: "100%", height: "330px", position: "relative" }}
+          <Card
+            key={`sale-${sale.medicine_id}`}
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'transform 0.3s, box-shadow 0.3s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.1)'
+              },
+              borderRadius: '12px',
+              overflow: 'hidden'
+            }}
           >
-            <Box
-              onMouseEnter={() => setHoveredCard(uniqueKey)}
-              onMouseLeave={() => setHoveredCard(null)}
+            <CardMedia
+              component="img"
+              height="160"
+              image={
+                sale.uploadedFiles?.length > 0
+                  ? `https://ipfs.io/ipfs/${sale.uploadedFiles[0].ipfsHash}`
+                  : sale.image_url || "/images/placeholder.png"
+              }
+              alt={sale.name}
               sx={{
-                perspective: "1000px",
-                width: "100%",
-                height: "100%",
-                cursor: "pointer",
-                position: "relative",
+                objectFit: 'contain',
+                backgroundColor: '#f9f9f9',
+                p: 1
               }}
-            >
-              <Box
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  position: "relative",
-                  transformStyle: "preserve-3d",
-                  transition: "transform 0.6s",
-                  transform:
-                    hoveredCard === uniqueKey
-                      ? "rotateY(180deg)"
-                      : "rotateY(0deg)",
+            />
+            
+            <CardContent sx={{ flexGrow: 1 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  mb: 1,
+                  color: 'text.primary',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                {/* Front of the Card */}
-                <Card
+                {sale.name}
+              </Typography>
+              
+              <Stack spacing={1} sx={{ mb: 2 }}>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Price
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    ${formattedPrice}
+                  </Typography>
+                </Box>
+                
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Quantity
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {sale.quantity || 1}
+                  </Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+            
+            <CardContent sx={{ pt: 0 }}>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => onEditClick(sale)}
                   sx={{
-                    width: "100%",
-                    height: "100%",
-                    position: "absolute",
-                    backfaceVisibility: "hidden",
-                    backgroundColor: "rgba(255, 255, 255, 0.5)",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: "12px",
-                    boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    paddingBottom: "30px",
-                    alignItems: "center",
+                    backgroundColor: '#1976d2',
+                    '&:hover': { backgroundColor: '#1565c0' },
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    py: 1
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    height="140"
-                    image={
-                      sale.uploadedFiles?.length > 0
-                        ? `https://ipfs.io/ipfs/${sale.uploadedFiles[0].ipfsHash}`
-                        : sale.image_url || "/images/placeholder.png"
-                    }
-                    alt={sale.name}
-                    sx={{
-                      height: 200,
-                      objectFit: "contain",
-                      width: "100%",
-                      mt: 2,
-                    }}
-                  />
-                  <CardContent sx={{ textAlign: "center", flexGrow: 1 }}>
-                    <Typography variant="h6" sx={{ fontSize: "1rem", color: "#000000" }}>
-                      {sale.name}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#000000" }}>
-                      Sold on: {sale.saleDate || new Date().toLocaleDateString()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#000000" }}>
-                      Price: ${formattedPrice}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#000000" }}>
-                      Qty: {sale.quantity || 1}
-                    </Typography>
-                  </CardContent>
-                </Card>
-
-                {/* Back of the Card */}
-                <Card
+                  Edit
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => onRemoveFromSale(sale)}
                   sx={{
-                    width: "100%",
-                    height: "100%",
-                    position: "absolute",
-                    backfaceVisibility: "hidden",
-                    transform: "rotateY(180deg)",
-                    backgroundColor: "rgba(255, 255, 255, 0.5)",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: "12px",
-                    boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-                    display: "flex",
-                    flexDirection: "column",
-                    p: 2,
+                    borderColor: '#f44336',
+                    color: '#f44336',
+                    '&:hover': { 
+                      backgroundColor: '#ffebee',
+                      borderColor: '#f44336'
+                    },
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    py: 1
                   }}
                 >
-                  <Box
-                    sx={{
-                      flex: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      textAlign: "center",
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      sx={{ mb: 1, color: "#000000" }}
-                    >
-                      <strong>Price:</strong> ${formattedPrice}
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 1, color: "#000000" }}>
-                      <strong>Quantity:</strong> {sale.quantity || 1}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ mb: 1, color: "#000000" }}
-                    >
-                      <strong>Sold on:</strong> {sale.saleDate || new Date().toLocaleDateString()}
-                    </Typography>
-                  </Box>
-                  <Button
-                    variant="contained"
-                    onClick={() => onEditClick(sale)} // Pass the sale object to edit handler
-                    sx={{
-                      backgroundColor: "#2196F3",
-                      color: "#FFFFFF",
-                      "&:hover": { backgroundColor: "#1976D2" },
-                      alignSelf: "center",
-                      width: "80%",
-                      mt: "auto",
-                      mb: 1,
-                    }}
-                  >
-                    Edit Sale
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={() => onRemoveFromSale(sale)} // Pass the sale object to remove handler
-                    sx={{
-                      backgroundColor: "#f44336",
-                      color: "#FFFFFF",
-                      "&:hover": { backgroundColor: "#d32f2f" },
-                      alignSelf: "center",
-                      width: "80%",
-                      mb: 1,
-                    }}
-                  >
-                    Remove from Sale
-                  </Button>
-                </Card>
-              </Box>
-            </Box>
-          </Box>
+                  Remove
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
         );
       })}
     </Box>

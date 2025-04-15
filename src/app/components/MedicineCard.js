@@ -1,144 +1,123 @@
 "use client";
 import { useState } from "react";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
+import { 
+  Box, Card, CardContent, CardMedia, 
+  Typography, Button, Chip 
+} from "@mui/material";
 
 const MedicineCard = ({ medicine, onCardClick }) => {
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 0: return { bg: '#FFF8E1', text: '#FF8F00' }; // Pending
+      case 1: return { bg: '#FFEBEE', text: '#D32F2F' }; // Rejected
+      case 2: return { bg: '#E8F5E9', text: '#388E3C' }; // Accepted
+      default: return { bg: '#F5F5F5', text: '#616161' };
+    }
+  };
+
+  const status = getStatusColor(medicine.status);
 
   return (
-    <Box sx={{ 
-      width: "100%", 
-      height: "310px", 
-      position: "relative",
-      pt: 2,
-      mb: 0.5
-    }}>
-      <Box
-        onMouseEnter={() => setIsFlipped(true)}
-        onMouseLeave={() => setIsFlipped(false)}
-        sx={{
-          perspective: "1000px",
-          width: "100%",
-          height: "100%",
-          cursor: "pointer",
-          position: "relative",
-        }}
-      >
-        <Box
+    <Card
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+        transform: isHovered ? 'translateY(-4px)' : 'none',
+        boxShadow: isHovered ? '0 6px 20px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)',
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}
+    >
+      {medicine.uploadedFiles?.length > 0 && (
+        <CardMedia
+          component="img"
+          height="160"
+          image={`https://ipfs.io/ipfs/${medicine.uploadedFiles[0].ipfsHash}`}
+          alt={medicine.name}
           sx={{
-            width: "100%",
-            height: "100%",
-            position: "relative",
-            transformStyle: "preserve-3d",
-            transition: "transform 0.6s",
-            transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+            objectFit: 'contain',
+            backgroundColor: '#f9f9f9',
+            p: 1
+          }}
+        />
+      )}
+      
+      <CardContent sx={{ 
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        <Box sx={{ mb: 1 }}>
+          <Chip
+            label={
+              medicine.status === 0 ? 'Pending' : 
+              medicine.status === 1 ? 'Rejected' : 'Accepted'
+            }
+            size="small"
+            sx={{
+              backgroundColor: status.bg,
+              color: status.text,
+              fontWeight: 600,
+              fontSize: '0.7rem'
+            }}
+          />
+        </Box>
+        
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            mb: 1,
+            color: 'text.primary',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical'
           }}
         >
-          {/* Front of the Card */}
-          <Card
+          {medicine.name}
+        </Typography>
+        
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.secondary',
+            mb: 2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical'
+          }}
+        >
+          {medicine.description || "No description available"}
+        </Typography>
+        
+        <Box sx={{ mt: 'auto' }}>
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={() => onCardClick(medicine)}
             sx={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              backfaceVisibility: "hidden",
-              backgroundColor: "rgba(255, 255, 255, 0.5)",
-              backdropFilter: "blur(10px)",
-              borderRadius: "12px",
-              boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              paddingBottom: "50px",
-              alignItems: "center",
+              backgroundColor: '#1976d2',
+              '&:hover': { backgroundColor: '#1565c0' },
+              textTransform: 'none',
+              fontWeight: 500,
+              py: 1
             }}
           >
-            {medicine.uploadedFiles?.length > 0 && (
-              <CardMedia
-                component="img"
-                height="140px"
-                image={`https://ipfs.io/ipfs/${medicine.uploadedFiles[0].ipfsHash}`}
-                alt={medicine.name}
-                sx={{
-                  height: 200,
-                  objectFit: "contain",
-                  width: "100%",
-                  mt: 2
-                }}
-              />
-            )}
-            <CardContent sx={{ 
-              textAlign: "center", 
-              flexGrow: 1,
-              pt: 1
-            }}>
-              <Typography variant="h6" sx={{ fontSize: "1rem", color: "#000000" }}>
-                {medicine.name}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Back of the Card */}
-          <Card
-            sx={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-              backgroundColor: "rgba(255, 255, 255, 0.5)",
-              backdropFilter: "blur(10px)",
-              borderRadius: "12px",
-              boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-              display: "flex",
-              flexDirection: "column",
-              p: 2,
-            }}
-          >
-            <Box sx={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
-            }}>
-              <Typography variant="body1" sx={{ 
-                mb: 1, 
-                color: "#000000",
-                px: 1
-              }}>
-                Description: {medicine.description || "No description available"}
-              </Typography>
-              <Typography variant="body1" sx={{ 
-                color: "#000000",
-              }}>
-                Type: {medicine.types?.join(", ") || "N/A"}
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              onClick={() => onCardClick(medicine)}
-              sx={{
-                backgroundColor: "#2196F3",
-                color: "#FFFFFF",
-                '&:hover': { backgroundColor: "#1976D2" },
-                alignSelf: "center",
-                width: "80%",
-                mt: "auto",
-                mb: 1
-              }}
-            >
-              View Details
-            </Button>
-          </Card>
+            View Details
+          </Button>
         </Box>
-      </Box>
-    </Box>
+      </CardContent>
+    </Card>
   );
 };
 

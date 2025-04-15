@@ -1,7 +1,19 @@
 "use client";
 
 import React from "react";
-import { Box, Typography, Grid, Card, CardMedia, CardContent } from "@mui/material";
+import { 
+  Box, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardMedia, 
+  CardContent,
+  Link,
+  Stack,
+  Button
+} from "@mui/material";
+import NextLink from "next/link";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const healthInsights = [
   {
@@ -41,9 +53,34 @@ const healthInsights = [
 export const HealthInsightsSection = () => {
   return (
     <Box id="insights" sx={{ mt: 10, px: 3 }}>
-      <Typography variant="h4" sx={{ fontWeight: "bold", mb: 5, textAlign: "left" }}>
-        Health & Medicine Insights
-      </Typography>
+      <Stack 
+        direction="row" 
+        justifyContent="space-between" 
+        alignItems="center" 
+        sx={{ mb: 5 }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+          Health & Medicine Insights
+        </Typography>
+        <Link 
+          href="/userstore/userstorepages/insights" 
+          component={NextLink}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            color: '#002f6c',
+            fontWeight: 'bold',
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            }
+          }}
+        >
+          View More Insights
+          <ArrowForwardIcon sx={{ ml: 1, fontSize: '18px' }} />
+        </Link>
+      </Stack>
+      
       <Grid container spacing={4} justifyContent="center">
         {healthInsights.map((info, index) => (
           <Grid item key={index} xs={12} sm={6} md={3}>

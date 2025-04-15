@@ -1,5 +1,5 @@
 "use client";
-import { Typography, Box, Button, Stack ,Tooltip} from "@mui/material";
+import { Typography, Box, Button, Stack, Tooltip } from "@mui/material";
 import { useState, useEffect } from "react";
 import { fetchRejectionComments } from "../../../lib/adminmedicinefetch";
 
@@ -13,7 +13,7 @@ const MedicineDetails = ({
     const [loadingComments, setLoadingComments] = useState(false);
 
     useEffect(() => {
-        if (medicine?.status === "Rejected") {
+        if (medicine?.status === 1) { // Status 1 = Rejected
             const fetchComments = async () => {
                 setLoadingComments(true);
                 try {
@@ -31,10 +31,29 @@ const MedicineDetails = ({
 
     if (!medicine) return null;
 
+    // Map status number to text
+    const getStatusText = (status) => {
+        switch(status) {
+            case 0: return "Pending";
+            case 1: return "Rejected";
+            case 2: return "Accepted";
+            default: return "Unknown";
+        }
+    };
+
+    // Map status to color
+    const getStatusColor = (status) => {
+        switch(status) {
+            case 0: return "orange";
+            case 1: return "red";
+            case 2: return "green";
+            default: return "black";
+        }
+    };
 
     return (
         <Box sx={{ 
-            mt:3,
+            mt: 3, // This is your existing top margin (3 = 24px)
             width: '100%',
             height: '100%',
             display: 'flex',
@@ -82,55 +101,58 @@ const MedicineDetails = ({
                     
                     <Box sx={{ gridColumn: "1 / -1" }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Excipients:</Typography>
-                        <Typography variant="body1">{medicine.excipients?.join(", ") || "N/A"}</Typography>
+                        <Typography variant="body1">
+                            {medicine.ingredients?.join(", ") || "N/A"}
+                        </Typography>
                     </Box>
                     
                     <Box sx={{ gridColumn: "1 / -1" }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Types:</Typography>
-                        <Typography variant="body1">{medicine.types?.join(", ") || "N/A"}</Typography>
+                        <Typography variant="body1">
+                            {medicine.types?.join(", ") || "N/A"}
+                        </Typography>
                     </Box>
                     
                     <Box sx={{ gridColumn: "1 / -1" }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Status:</Typography>
                         <Typography variant="body1" sx={{ 
-                            color: medicine.status === "Accepted" ? "green" : 
-                                  medicine.status === "Rejected" ? "red" : "orange",
+                            color: getStatusColor(medicine.status),
                             fontWeight: "bold"
                         }}>
-                            {medicine.status || "N/A"}
+                            {getStatusText(medicine.status)}
                         </Typography>
                     </Box>
                 </Box>
 
-                {/* Rejection Comments Section */}
-                {medicine.status === "Rejected" && (
-                        <Box sx={{ gridColumn: "1 / -1", mt: 2 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                                Rejection Reason:
+                {/* Rejection Comments Section - Only shown for rejected medicines (status 1) */}
+                {medicine.status === 1 && (
+                    <Box sx={{ gridColumn: "1 / -1", mt: 2 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                            Rejection Reason:
+                        </Typography>
+                        {loadingComments ? (
+                            <Typography variant="body1">Loading comments...</Typography>
+                        ) : rejectionComments.length > 0 ? (
+                            rejectionComments.map((comment, index) => (
+                                <Box key={index} sx={{ 
+                                    mb: 2, 
+                                    p: 2, 
+                                    backgroundColor: '#FFF8F8',
+                                    borderRadius: '4px',
+                                    borderLeft: '4px solid #FF5252'
+                                }}>
+                                    <Typography variant="body1">
+                                        {comment.rejection_comments}
+                                    </Typography>
+                                </Box>
+                            ))
+                        ) : (
+                            <Typography variant="body1" sx={{ fontStyle: "italic" }}>
+                                No rejection comments available
                             </Typography>
-                            {loadingComments ? (
-                                <Typography variant="body1">Loading comments...</Typography>
-                            ) : rejectionComments.length > 0 ? (
-                                rejectionComments.map((comment, index) => (
-                                    <Box key={index} sx={{ 
-                                        mb: 2, 
-                                        p: 2, 
-                                        backgroundColor: '#FFF8F8',
-                                        borderRadius: '4px',
-                                        borderLeft: '4px solid #FF5252'
-                                    }}>
-                                        <Typography variant="body1">
-                                            {comment.rejection_comments}
-                                        </Typography>
-                                    </Box>
-                                ))
-                            ) : (
-                                <Typography variant="body1" sx={{ fontStyle: "italic" }}>
-                                    No rejection comments available
-                                </Typography>
-                            )}
-                        </Box>
-                    )}
+                        )}
+                    </Box>
+                )}
                 
                 <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Description:</Typography>

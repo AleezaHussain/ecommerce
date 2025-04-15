@@ -26,8 +26,8 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
     // Get all medicine token IDs and their statuses
     const [tokenIds, statuses] = await contract.getAllMedicinesByManufacturer(walletAddress);
 
-    console.log(`✅ Medicine Token IDs retrieved:`, tokenIds);
-    console.log(`✅ Corresponding statuses:`, statuses);
+    console.log("✅ Medicine Token IDs retrieved:", tokenIds);
+    console.log("✅ Corresponding statuses:", statuses);
 
     let pending = [];
     let accepted = [];
@@ -37,43 +37,47 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
       const tokenId = tokenIds[i].toString();
       const statusEnumValue = Number(statuses[i]);
 
-      // Fetch metadata from IPFS
-      const tokenURI = await contract.tokenURI(tokenId);
-      const ipfsUrl = `https://ipfs.io/ipfs/${tokenURI}`;
+      try {
+        // Fetch metadata from IPFS
+        const tokenURI = await contract.tokenURI(tokenId);
+        const ipfsUrl = `https://ipfs.io/ipfs/${tokenURI}`;
 
-      console.log(`🌍 Fetching metadata from IPFS: ${ipfsUrl}`);
-      const response = await fetch(ipfsUrl);
-      const metadata = await response.json();
+        console.log(`🌍 Fetching metadata from IPFS: ${ipfsUrl}`);
+        const response = await fetch(ipfsUrl);
+        const metadata = await response.json();
 
-      console.log(`📜 Extracted Metadata from IPFS:`, metadata);
+        console.log("📜 Extracted Metadata from IPFS:", metadata);
 
-      // Map all necessary metadata fields
-      const medicine = {
-        tokenId,
-        name: metadata.name || "Unknown Medicine",
-        medicineId: metadata.medicineId || "N/A",
-        batchNumber: metadata.batchNumber || "N/A",
-        manufactureDate: metadata.manufactureDate || "N/A",  // ✅ New field
-        expiryDate: metadata.expiryDate || "N/A",
-        ingredients: metadata.excipients || [],              // ✅ Using excipients as ingredients
-        types: metadata.types || [],                         // ✅ New field
-        description: metadata.description || "No description available",
-        uploadedFiles: metadata.uploadedFiles || [],
-        status: statusEnumValue,
-      };
+        // Map all necessary metadata fields
+        const medicine = {
+          tokenId,
+          name: metadata.name || "Unknown Medicine",
+          medicineId: metadata.medicineId || "N/A",
+          batchNumber: metadata.batchNumber || "N/A",
+          manufactureDate: metadata.manufactureDate || "N/A",
+          expiryDate: metadata.expiryDate || "N/A",
+          ingredients: metadata.excipients || [],
+          types: metadata.types || [],
+          description: metadata.description || "No description available",
+          uploadedFiles: metadata.uploadedFiles || [],
+          status: statusEnumValue,
+        };
 
-      // Categorize medicines
-      if (statusEnumValue === 0) pending.push(medicine);
-      else if (statusEnumValue === 1) rejected.push(medicine);
-      else if (statusEnumValue === 2) accepted.push(medicine);
+        // Categorize medicines
+        if (statusEnumValue === 0) pending.push(medicine);
+        else if (statusEnumValue === 1) rejected.push(medicine);
+        else if (statusEnumValue === 2) accepted.push(medicine);
+      } catch (err) {
+        console.warn(`⚠️ Skipping token ID ${tokenId} due to fetch/parse error:`, err);
+        continue;
+      }
     }
 
-    console.log(`📌 Categorized Medicines:`, { pending, accepted, rejected });
+    console.log("📌 Categorized Medicines:", { pending, accepted, rejected });
 
     return { pending, accepted, rejected };
   } catch (error) {
-    console.error(`❌ Error fetching medicines:`, error);
-    alert(`Failed to fetch medicines.`);
+    console.error("❌ Error fetching medicines:", error);
     return { pending: [], accepted: [], rejected: [] };
   }
 };

@@ -22,7 +22,7 @@ const famousMedicines = [
   { name: "Neurobion", brand: "Merck", category: "Vitamin Supplement", packSize: "30 Tablets", price: "Rs 400", discount: "10% Off", originalPrice: "Rs 450", image: "/images/a.jpg" },
 ];
 
-export const FamousMedicinesSection = () => {
+export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOnlyDiscounted = false }) => {
   const scrollRef = useRef(null);
 
   const handleScroll = (direction) => {
@@ -32,32 +32,16 @@ export const FamousMedicinesSection = () => {
     }
   };
 
-  return (
-    <Box id="famous" sx={{ mt: 10, position: "relative" }}>
-      <Typography variant="h5" sx={{ fontWeight: "bold", mb: 4, textAlign: "left" }}>
-        Most Famous Medicines
-      </Typography>
+  const medicinesToShow = showOnlyDiscounted 
+    ? famousMedicines.filter(medicine => medicine.discount)
+    : famousMedicines;
 
-      <Box sx={{ position: "relative" }}>
-        <IconButton
-          onClick={() => handleScroll("left")}
-          sx={{
-            position: "absolute",
-            left: 0,
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 2,
-            backgroundColor: "white",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-            borderRadius: "50%",
-            width: "40px",
-            height: "40px",
-            "&:hover": { backgroundColor: "#E5E7EB" },
-          }}
-        >
-          <ChevronLeftIcon />
-        </IconButton>
-
+    return (
+      <Box id="famous" sx={{ ml: 3, mt: 10 }}>
+        <Typography variant="h5" sx={{ fontWeight: "bold", mb: 4, textAlign: "left" }}>
+          {title}
+        </Typography>
+    
         <Box
           ref={scrollRef}
           sx={{
@@ -66,11 +50,16 @@ export const FamousMedicinesSection = () => {
             scrollBehavior: "smooth",
             gap: 2,
             paddingBottom: "10px",
+            paddingLeft: "0px",
+            paddingRight: "30px",
+
+
+
             scrollbarWidth: "none",
             "&::-webkit-scrollbar": { display: "none" },
           }}
         >
-          {famousMedicines.map((medicine, index) => (
+          {medicinesToShow.map((medicine, index) => (
             <Card
               key={index}
               sx={{
@@ -101,14 +90,14 @@ export const FamousMedicinesSection = () => {
                   {medicine.discount}
                 </Box>
               )}
-
+    
               <CardMedia
                 component="img"
                 image={medicine.image}
                 alt={medicine.name}
                 sx={{ height: "140px", objectFit: "contain", padding: "10px" }}
               />
-
+    
               <CardContent sx={{ textAlign: "center" }}>
                 <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: "16px" }}>
                   {medicine.name}
@@ -122,12 +111,14 @@ export const FamousMedicinesSection = () => {
                 <Typography variant="body2" sx={{ color: "#757575", fontSize: "14px" }}>
                   {medicine.packSize}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ textDecoration: "line-through", color: "#D32F2F", fontSize: "14px" }}
-                >
-                  {medicine.originalPrice}
-                </Typography>
+                {medicine.originalPrice && (
+                  <Typography
+                    variant="body2"
+                    sx={{ textDecoration: "line-through", color: "#D32F2F", fontSize: "14px" }}
+                  >
+                    {medicine.originalPrice}
+                  </Typography>
+                )}
                 <Typography variant="body1" sx={{ fontWeight: "bold", color: "#2E7D32", fontSize: "18px" }}>
                   {medicine.price}
                 </Typography>
@@ -142,26 +133,7 @@ export const FamousMedicinesSection = () => {
             </Card>
           ))}
         </Box>
-
-        <IconButton
-          onClick={() => handleScroll("right")}
-          sx={{
-            position: "absolute",
-            right: 0,
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 2,
-            backgroundColor: "white",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-            borderRadius: "50%",
-            width: "40px",
-            height: "40px",
-            "&:hover": { backgroundColor: "#E5E7EB" },
-          }}
-        >
-          <ChevronRightIcon />
-        </IconButton>
       </Box>
-    </Box>
-  );
+    );
+    
 };

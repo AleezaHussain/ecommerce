@@ -724,8 +724,8 @@
       ]
     },
     "D:\\study\\ecommerce\\ecommerce\\blockchain\\contracts\\medicine.sol": {
-      "lastModificationDate": 1742406243387,
-      "contentHash": "a1ca50169a1fb739e37bf6505afd23cb",
+      "lastModificationDate": 1744535461203,
+      "contentHash": "34803c16725d9f9cce58983c11841c2d",
       "sourceName": "blockchain/contracts/medicine.sol",
       "solcConfig": {
         "version": "0.8.20",

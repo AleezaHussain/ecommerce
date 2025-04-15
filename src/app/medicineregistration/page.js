@@ -221,12 +221,15 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
   };
 
   const removeExcipient = (index) => {
-    setMedicine((prev) => ({
-      ...prev,
-      excipients: prev.excipients.filter((_, i) => i !== index),
-    }));
+    if (medicine.excipients.length > 1) { // Ensure at least one excipient remains
+      setMedicine((prev) => ({
+        ...prev,
+        excipients: prev.excipients.filter((_, i) => i !== index),
+      }));
+    } else {
+      setErrorMsg({ open: true, message: "❌ At least one excipient is required" });
+    }
   };
-
   return (
     <Box
       sx={{
@@ -285,7 +288,7 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
             p: 3,
             width: "100%",
             maxWidth: "900px",
-            maxHeight: "85vh",
+            maxHeight: "75vh",
             overflowY: "auto",
             borderRadius: 2,
             backgroundColor: "rgba(255, 255, 255)",
@@ -438,35 +441,50 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
               </Grid>
 
               {/* Excipients */}
-              <Grid item xs={12}>
-                <Typography variant="h6" sx={{ mt: 1, mb: 1 }}>
-                  Excipients
-                </Typography>
-                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                  {medicine.excipients.map((excipient, index) => (
-                    <TextField
-                      key={index}
-                      label={`Excipient ${index + 1}`}
-                      value={excipient}
-                      onChange={(e) => {
-                        const newExcipients = [...medicine.excipients];
-                        newExcipients[index] = e.target.value;
-                        setMedicine((prev) => ({ ...prev, excipients: newExcipients }));
-                      }}
-                      sx={{ flex: 1, minWidth: "200px" }}
-                      InputLabelProps={{ required: false }}
-                    />
-                  ))}
-                </Box>
-                <Button
-                  type="button"
-                  onClick={addExcipient}
-                  variant="contained"
-                  sx={{ mt: 2, padding: "10px 30px" }}
-                >
-                  Add Excipient
-                </Button>
-              </Grid>
+<Grid item xs={12}>
+  <Typography variant="h6" sx={{ mt: 1, mb: 1 }}>
+    Excipients
+  </Typography>
+  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    {medicine.excipients.map((excipient, index) => (
+      <Box key={index} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+        <TextField
+          fullWidth
+          label={`Excipient ${index + 1}`}
+          value={excipient}
+          onChange={(e) => {
+            const newExcipients = [...medicine.excipients];
+            newExcipients[index] = e.target.value;
+            setMedicine((prev) => ({ ...prev, excipients: newExcipients }));
+          }}
+          InputLabelProps={{ required: false }}
+        />
+        <Tooltip title="Remove excipient" arrow>
+  <Button
+    variant="outlined"
+    color="error"
+    onClick={() => removeExcipient(index)}
+    sx={{ 
+      minWidth: '40px', 
+      height: '56px',
+      borderColor: 'error.main'
+    }}
+  >
+    −
+  </Button>
+</Tooltip>
+      </Box>
+    ))}
+  </Box>
+  <Button
+    type="button"
+    onClick={addExcipient}
+    variant="contained"
+    sx={{ mt: 2, padding: "10px 30px" }}
+  >
+    Add Excipient
+  </Button>
+</Grid>
 
               {/* Medicine Type */}
               <Grid item xs={12}>

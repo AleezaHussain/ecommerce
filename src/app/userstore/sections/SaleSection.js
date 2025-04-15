@@ -33,7 +33,7 @@ const saleCategories = [
 export const SaleSection = () => {
   return (
     <Box id="sale" sx={{ mt: 10, textAlign: "center", px: 3 }}>
-      <Typography variant="h4" sx={{ fontWeight: "bold", mb: 5, textAlign: "left" }}>
+      <Typography variant="h5" sx={{ fontWeight: "bold", mb: 5, textAlign: "left" }}>
         Sale
       </Typography>
       <Grid container spacing={6} justifyContent="center">

@@ -114,6 +114,11 @@ contract MedicineNFT is ERC721URIStorage {
         }
     }
 
+    function getTokenIdByIPFS(string memory hash) public view returns (uint256) {
+    return ipfsHashToTokenId[hash];
+}
+
+
     function verifyMedicineByQR(string memory _ipfsHash) public view returns (bool) {
         if (bytes(_ipfsHash).length == 0) {
             return false;

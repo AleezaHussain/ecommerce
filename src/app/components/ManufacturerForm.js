@@ -4,8 +4,8 @@ import { Container, Paper, Box, TextField, Button, FormControlLabel, Checkbox, C
 import Image from "next/image";
 import { SuccessMsgBox, ErrorMsgBox, InfoMsgBox } from '../components/MsgBox';
 import { storeManufacturerData } from "../testingblockchain/manufactureregistration/submit"; // Import the blockchain function
-import NavBar from "./NavBar";
-
+import NavBar from './NavBar';
+import { FooterSection } from "../userstore/sections/FooterSection";
 const ManufacturerForm = () => {
   const resetForm = () => {
     setFormData({
@@ -198,235 +198,214 @@ const ManufacturerForm = () => {
   return (
     <Box
       sx={{
-        overflow: "hidden",
-        position: "fixed",
-        width: "100vw",
-        minHeight: "120vh",
-        backgroundImage: "url('/final.avif')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        height: "100vh",
+        backgroundColor: "white",
+        padding: 0,
+        margin: 0,
       }}
     >
-      <NavBar/>
-      <Container
-        maxWidth="md" // Increased width
+      {/* Full-width NavBar */}
+      <Box sx={{ width: "100vw", position: "fixed", top: 0, left: 0, zIndex: 1200 }}>
+        <NavBar />
+      </Box>
+
+      {/* Main content - full width form */}
+      <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "calc(100vh - 150px)",
-          marginTop: "140px",
+          width: "100vw",
+          flex: 1,
+          padding: { xs: "80px 16px 16px", md: "70px 10% 16px" },
+          margin: 0,
+          boxSizing: "border-box",
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            width: "100%",
-            maxWidth: "900px", // Increased width
-            maxHeight: "84vh",
-            overflowY: "auto",
+        {/* Header Section - Centered */}
+        <Box sx={{ 
+          display: "flex", 
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          mb: 4,
+          textAlign: "center"
+        }}>
+          <Typography variant="h3" sx={{ 
+            fontWeight: 700,
+            color: "#004b8d",
+            fontSize: { xs: "1.8rem", md: "2.5rem" },
+            mb: 3
+          }}>
+            Manufacturer Registration
+          </Typography>
+          
+          {/* Improved Image Container */}
+          <Box sx={{
+            width: { xs: "100%", sm: "80%", md: "30%" },
+            maxWidth: "400px",
+            height: "auto",
+            aspectRatio: "1.5",
+            position: "relative",
             borderRadius: 2,
-            backgroundColor: "rgba(255, 255, 255)", // Translucent background
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {/* Image and Heading */}
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Typography variant="h4" sx={{ fontWeight: "bold" }}> {/* Heading on the left */}
-              Manufacturer Registration
-            </Typography>
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+            "& img": {
+              objectFit: "contain",
+              objectPosition: "center",
+              backgroundColor: "#f5f5f5",
+              padding: 2
+            }
+          }}>
             <Image
               src="/yar.png"
               alt="Manufacturer Registration"
-              width={200} // Smaller image
-              height={180} // Smaller image
-              style={{
-                objectFit: "cover",
-                borderRadius: "20px",
-              }}
+              layout="fill"
+              quality={100}
+              priority
             />
           </Box>
+        </Box>
 
-          <Box component="form" onSubmit={handleSubmit}>
-            {/* Upload PDF Button */}
-            <Tooltip title="Upload the manufacturer proof of certificate" arrow>
-              <Button
-                variant="contained"
-                component="label"
-                sx={{ width: "30%", height: "50px" }} // Shortened button
-              >
-                📄 Upload PDF
-                <input type="file" id="pdfUpload" name="certification" accept="application/pdf" hidden onChange={handleFileUpload} />
-              </Button>
-            </Tooltip>
+        {/* Form Section - directly on page */}
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
+          {/* Upload Button */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
+  <Tooltip title="Upload the manufacturer proof of certificate" arrow>
+    <Button
+      variant="contained"
+      component="label"
+      sx={{ 
+        width: { xs: "100%", sm: "50%", md: "30%" },
+        height: 50,
+        backgroundColor: "#004b8d",
+        "&:hover": {
+          backgroundColor: "#003366"
+        },
+        fontSize: "1rem",
+        fontWeight: 500,
+        textTransform: "capitalize" // This ensures only the first letter is capital
+      }}
+    >
+      📄 Upload PDF
+      <input type="file" id="pdfUpload" name="certification" accept="application/pdf" hidden onChange={handleFileUpload} />
+    </Button>
+  </Tooltip>
+</Box>
 
-            {/* Form Fields */}
-            <Grid container spacing={1}> {/* Reduced spacing between fields */}
-              {/* Email */}
-              <Grid item xs={12} md={4}>
+          {/* Form Fields Grid */}
+          <Grid container spacing={3}>
+            {[
+              { name: "email", label: "Email", type: "email", required: true, xs: 12, md: 4 },
+              { name: "name", label: "Manufacturer Name", required: true, xs: 12, md: 4 },
+              { name: "dateOfIssue", label: "Date of Issue", type: "date", required: true, xs: 12, md: 4 },
+              { name: "licenceNo", label: "Licence No.", required: true, xs: 12, md: 4 },
+              { name: "phone", label: "Phone Number", required: true, xs: 12, md: 4 },
+              { name: "physicalAddress", label: "Physical Address", required: true, xs: 12, md: 4 },
+              { name: "website", label: "Website (Optional)", xs: 12, md: 4 },
+              { name: "walletAddress", label: "Wallet Address", required: true, xs: 12, md: 4 },
+              { name: "certificationNumber", label: "Certification Number", disabled: true, xs: 12, md: 4 },
+            ].map((field) => (
+              <Grid item xs={field.xs} md={field.md} key={field.name}>
                 <TextField
                   fullWidth
-                  margin="normal" // Changed to match other fields
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
+                  variant="outlined"
+                  label={field.label}
+                  name={field.name}
+                  type={field.type || "text"}
+                  value={formData[field.name]}
                   onChange={handleChange}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  required
-                  InputLabelProps={{ required: false }} // Remove asterisk
+                  error={!!errors[field.name]}
+                  helperText={errors[field.name]}
+                  required={field.required}
+                  disabled={field.disabled}
+                  InputLabelProps={{ 
+                    shrink: field.type === "date" ? true : undefined,
+                    required: false 
+                  }}
+                  sx={{ 
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "rgba(0, 75, 141, 0.3)",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "rgba(0, 75, 141, 0.6)",
+                      },
+                    }
+                  }}
                 />
               </Grid>
+            ))}
+          </Grid>
 
-              {/* Manufacturer Name */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Manufacturer Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={!!errors.name}
-                  helperText={errors.name}
-                  required
-                  InputLabelProps={{ required: false }} // Remove asterisk
-                />
-              </Grid>
+          {/* Footer Section */}
+          <Box sx={{ 
+  display: "flex", 
+  alignItems: "center", 
+  justifyContent: "space-between", 
+  mt: 4,
+  flexDirection: { xs: "column", sm: "row" },
+  gap: 2
+}}>
+  <FormControlLabel
+    control={
+      <Checkbox 
+        checked={privacyChecked} 
+        onChange={handleChange} 
+        name="privacyChecked"
+        color="primary"
+        sx={{
+          color: "#004b8d",
+          "&.Mui-checked": {
+            color: "#004b8d",
+          },
+        }}
+      />
+    }
+    label={
+      <Typography variant="body2" sx={{ color: "#004b8d" }}>
+        I confirm that the information provided is accurate, and I agree to the{" "}
+        <a href="/userstore/userstorepages/privacypolicy" style={{ color: "#004b8d", fontWeight: 600 }}>
+          Privacy Policy
+        </a>{" "}
+        and{" "}
+        <a href="/userstore/userstorepages/terms" style={{ color: "#004b8d", fontWeight: 600 }}>
+          Terms of Service
+        </a>.
+      </Typography>
+    }
+  />
 
-              {/* Date of Issue */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Date of Issue"
-                  name="dateOfIssue"
-                  type="date"
-                  value={formData.dateOfIssue}
-                  onChange={handleChange}
-                  InputLabelProps={{ shrink: true, required: false }} // Remove asterisk
-                  error={!!errors.dateOfIssue}
-                  helperText={errors.dateOfIssue}
-                  required
-                />
-              </Grid>
+  <Button
+    type="submit"
+    variant="contained"
+    disabled={isSubmitting}
+    sx={{ 
+      padding: "12px 40px",
+      backgroundColor: "#004b8d",
+      "&:hover": {
+        backgroundColor: "#003366"
+      },
+      minWidth: "220px",
+      fontSize: "1rem",
+      fontWeight: 500,
+      textTransform: "none",
+      borderRadius: 2,
+    }}
+  >
+    {isSubmitting ? (
+      <CircularProgress size={24} color="inherit" />
+    ) : (
+      "Register Manufacturer"
+    )}
+  </Button>
+</Box>
 
-              {/* Licence No. */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Licence No."
-                  name="licenceNo"
-                  value={formData.licenceNo}
-                  onChange={handleChange}
-                  error={!!errors.licenceNo}
-                  helperText={errors.licenceNo}
-                  required
-                  InputLabelProps={{ required: false }} // Remove asterisk
-                />
-              </Grid>
 
-              {/* Phone Number */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Phone Number"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={!!errors.phone}
-                  helperText={errors.phone}
-                  required
-                  InputLabelProps={{ required: false }} // Remove asterisk
-                />
-              </Grid>
+        </Box>
+      </Box>
 
-              {/* Physical Address */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Physical Address"
-                  name="physicalAddress"
-                  value={formData.physicalAddress}
-                  onChange={handleChange}
-                  error={!!errors.physicalAddress}
-                  helperText={errors.physicalAddress}
-                  required
-                  InputLabelProps={{ required: false }} // Remove asterisk
-                />
-              </Grid>
-
-              {/* Website */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Website (Optional)"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  InputLabelProps={{ required: false }} // Remove asterisk
-                />
-              </Grid>
-
-              {/* Wallet Address */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Wallet Address"
-                  name="walletAddress"
-                  value={formData.walletAddress}
-                  onChange={handleChange}
-                  error={!!errors.walletAddress}
-                  helperText={errors.walletAddress}
-                  required
-                  InputLabelProps={{ required: false }} // Remove asterisk
-                />
-              </Grid>
-
-              {/* Certification Number */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Certification Number"
-                  name="certificationNumber"
-                  value={formData.certificationNumber}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Privacy Policy Checkbox and Submit Button */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 2 }}>
-              <FormControlLabel
-                control={<Checkbox checked={privacyChecked} onChange={handleChange} name="privacyChecked" />}
-                label="I accept the privacy policy."
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={isSubmitting}
-                sx={{ padding: "10px 30px" }}
-              >
-                {isSubmitting ? <CircularProgress size={24} /> : "Register Manufacturer"}
-              </Button>
-            </Box>
-          </Box>
-        </Paper>
-      </Container>
-
-      {/* Success, Error, and Info Messages */}
+      {/* Message Boxes */}
       <Box
         sx={{
           position: "fixed",
@@ -437,8 +416,8 @@ const ManufacturerForm = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          zIndex: 2000, // Higher than navbar's z-index
-          pointerEvents: "none", // Allow clicks to pass through when closed
+          zIndex: 2000,
+          pointerEvents: "none",
         }}
       >
         <SuccessMsgBox
@@ -458,6 +437,7 @@ const ManufacturerForm = () => {
           message={infoMsg.message}
         />
       </Box>
+      <FooterSection />
     </Box>
   );
 };
