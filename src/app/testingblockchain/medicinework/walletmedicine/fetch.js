@@ -10,8 +10,6 @@ const MedicineNFTABI = MedicineNFT.abi;
  * @param {string} walletAddress - The wallet address of the manufacturer.
  * @returns {Object} - An object containing categorized medicines.
  */
-
-
 export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
   if (!window.ethereum) {
     alert("❌ MetaMask not detected. Please install MetaMask.");
@@ -25,7 +23,7 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, MedicineNFTABI, provider);
 
-    // Call the updated smart contract function to get all medicine token IDs and their statuses
+    // Get all medicine token IDs and their statuses
     const [tokenIds, statuses] = await contract.getAllMedicinesByManufacturer(walletAddress);
 
     console.log(`✅ Medicine Token IDs retrieved:`, tokenIds);
@@ -37,7 +35,7 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
 
     for (let i = 0; i < tokenIds.length; i++) {
       const tokenId = tokenIds[i].toString();
-      const statusEnumValue = Number(statuses[i]); // Convert BigInt to Number
+      const statusEnumValue = Number(statuses[i]);
 
       // Fetch metadata from IPFS
       const tokenURI = await contract.tokenURI(tokenId);
@@ -49,21 +47,22 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
 
       console.log(`📜 Extracted Metadata from IPFS:`, metadata);
 
-      // Extract additional information from metadata
+      // Map all necessary metadata fields
       const medicine = {
         tokenId,
         name: metadata.name || "Unknown Medicine",
         medicineId: metadata.medicineId || "N/A",
         batchNumber: metadata.batchNumber || "N/A",
+        manufactureDate: metadata.manufactureDate || "N/A",  // ✅ New field
+        expiryDate: metadata.expiryDate || "N/A",
+        ingredients: metadata.excipients || [],              // ✅ Using excipients as ingredients
+        types: metadata.types || [],                         // ✅ New field
         description: metadata.description || "No description available",
-        manufacturer: metadata.manufacturer || "Unknown Manufacturer",
-        expiryDate: metadata.expiryDate || "No Expiry Date",
-        ingredients: metadata.ingredients || [],
-        status: statusEnumValue, // Store status as number
         uploadedFiles: metadata.uploadedFiles || [],
+        status: statusEnumValue,
       };
 
-      // Categorize medicines by status
+      // Categorize medicines
       if (statusEnumValue === 0) pending.push(medicine);
       else if (statusEnumValue === 1) rejected.push(medicine);
       else if (statusEnumValue === 2) accepted.push(medicine);
@@ -79,8 +78,9 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
   }
 };
 
-
-
+/**
+ * Custom hook to detect wallet and return wallet address.
+ */
 export const useWallet = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [walletLoading, setWalletLoading] = useState(true);

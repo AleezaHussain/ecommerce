@@ -1,7 +1,8 @@
 "use client"; // Ensure this directive is at the top for client-side rendering
 
 import { useState } from "react";
-import { ethers } from "ethers";
+import { BrowserProvider, Contract } from "ethers";
+
 
 export default function ManufacturerRegistrationForm() {
   const [formData, setFormData] = useState({

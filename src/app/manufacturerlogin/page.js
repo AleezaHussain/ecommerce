@@ -7,6 +7,8 @@ import { SuccessMsgBox, ErrorMsgBox, InfoMsgBox,StatusMsgBox  } from "../compone
 import {fetchRejectionComments} from '../../../lib/adminmanufacturerfetch';
 import Link from 'next/link';
 import NavBar from "../components/NavBar";
+import { BrowserProvider } from "ethers";
+
 
 const ManufacturerLogin = () => {
     const [inputValue, setInputValue] = useState("");
