@@ -26,8 +26,12 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
     // Get all medicine token IDs and their statuses
     const [tokenIds, statuses] = await contract.getAllMedicinesByManufacturer(walletAddress);
 
+<<<<<<< HEAD
     console.log("✅ Medicine Token IDs retrieved:", tokenIds);
     console.log("✅ Corresponding statuses:", statuses);
+=======
+    const tokenIds = await contract.getMedicinesByManufacturer(walletAddress, statusEnumValue);    console.log(`✅ ${status} Medicine IDs:`, tokenIds);
+>>>>>>> mavra
 
     let pending = [];
     let accepted = [];

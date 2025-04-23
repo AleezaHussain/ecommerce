@@ -17,6 +17,7 @@ import CardMedia from '@mui/material/CardMedia';
 import CircularProgress from '@mui/material/CircularProgress';
 import AddIcon from "@mui/icons-material/Add";
 import MedicineForm from '../medicineregistration/page';
+<<<<<<< HEAD
 import { SuccessMsgBox, ErrorMsgBox, InfoMsgBox } from '../components/MsgBox';
 import AcceptedMedicinesChart from './AcceptedMedicinesChart';
 import PendingMedicinesChart from './PendingMedicinesChart';
@@ -30,6 +31,8 @@ import { fetchMedicinesByStatus } from '../testingblockchain/medicinework/accept
 import MedicineDetails from './MedicineDetails';
 import { getApprovedManufacturers } from "../testingblockchain/accepted-rejected-manufacturer/fetch";
 import { useRouter } from "next/navigation";
+=======
+>>>>>>> mavra
 
 import { 
   addMedicineToSale , 
