@@ -5,7 +5,7 @@ async function main() {
     console.log("🚀 Deploying ManufacturerStorage contract to Sepolia...");
 
     // Get the contract factory
-    const ManufacturerStorage = await hre.ethers.getContractFactory("ManufacturerStorage");
+    const ManufacturerStorage = await hre.ethers.getContractFactory("ManufacturerNFTStorage");
 
     // Deploy the contract to Sepolia
     const contract = await ManufacturerStorage.deploy();

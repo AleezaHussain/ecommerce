@@ -122,65 +122,47 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
       setErrorMsg({ open: true, message: "❌ Please select a file to upload." });
       return;
     }
-  
+
     if (file.type !== "application/pdf") {
       setErrorMsg({ open: true, message: "❌ Please upload a valid PDF file." });
       return;
     }
   
-<<<<<<< HEAD
     setPdf(file); // This is what we're validating against
     setPdfUrl(URL.createObjectURL(file));
     setLoading(true);
     setInfoMsg({ open: true, message: "Processing PDF..." }); // Show processing message
 
-=======
-    setPdf(file);
-    setPdfUrl(URL.createObjectURL(file));
-    setLoading(true);
-  
->>>>>>> mavra
     const formData = new FormData();
     formData.append("certificate", file);
-  
+
     try {
       const response = await fetch("/api/medicineregistration/autofill", {
         method: "POST",
         body: formData,
       });
-  
+
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-  
+
       const result = await response.json();
-<<<<<<< HEAD
 
       if (!result.extractedData) {
         throw new Error("No extracted data found.");
       }
 
-=======
-  
-      if (!result.extractedData) throw new Error("No extracted data found.");
-  
->>>>>>> mavra
       const formattedDosage = result.extractedData.dosage_form
         ? result.extractedData.dosage_form
             .toLowerCase()
             .replace(/\b\w/g, (char) => char.toUpperCase())
         : "";
-<<<<<<< HEAD
 
       const updatedTypes = dosageOptions.includes(formattedDosage)
         ? [formattedDosage]
         : [];
-=======
-  
-      const updatedTypes = dosageOptions.includes(formattedDosage) ? [formattedDosage] : [];
->>>>>>> mavra
       const updatedExcipients = result.extractedData.excipients || [""];
-  
+
       setMedicine((prev) => ({
         ...prev,
         name: result.extractedData.medicine_name || "",
@@ -237,7 +219,7 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
   const addExcipient = () => {
     setMedicine((prev) => ({ ...prev, excipients: [...prev.excipients, ""] }));
   };
-  
+
   const removeExcipient = (index) => {
     if (medicine.excipients.length > 1) { // Ensure at least one excipient remains
       setMedicine((prev) => ({
@@ -274,133 +256,6 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
           pointerEvents: "none",
         }}
       >
-<<<<<<< HEAD
-=======
-        <label className="block mb-2 text-lg font-semibold">Upload Certificate</label>
-        <input
-          type="file"
-          onChange={handleFileChange}
-          className="w-full p-2 border"
-          accept="application/pdf"
-        />
-        {errors.certificate && <p className="text-red-500">{errors.certificate}</p>} {/* Display error */}
-        {loading && <p className="text-blue-600">Processing...</p>}
-
-        <label className="block mt-4 mb-2">Medicine Name </label>
-        <input
-          type="text"
-          name="name"
-          className="w-full p-2 rounded"
-          required
-          value={medicine.name}
-          onChange={handleChange}
-        />
-
-        <label className="block mt-4 mb-2">Medicine Id </label>
-        <input
-          type="text"
-          name="medicineId"
-          className="w-full p-2 rounded"
-          required
-          value={medicine.medicineId}
-          onChange={handleChange}
-        />
-
-        <label className="block mt-4 mb-2">Batch Number </label>
-        <input
-          type="text"
-          name="batchNumber"
-          className="w-full p-2 rounded"
-          required
-          value={medicine.batchNumber}
-          onChange={handleChange}
-        />
-
-        <label className="block mt-4 mb-2">Manufacture Date</label>
-        <input
-          type="date"
-          name="manufactureDate"
-          className="w-full p-2 rounded"
-          onChange={handleChange}
-        />
-
-        <label className="block mt-4 mb-2">Expiry Date</label>
-        <input
-          type="date"
-          name="expiryDate"
-          className="w-full p-2 rounded"
-          onChange={handleChange}
-        />
-
-<label className="block mt-4 mb-2">Excipients</label>
-{medicine.excipients.map((excipient, index) => (
-  <div key={index} className="flex items-center gap-2 mb-2">
-    <input
-      type="text"
-      className="w-full p-2 rounded"
-      placeholder={`Excipient ${index + 1}`}
-      value={excipient}
-      onChange={(e) => {
-        const newExcipients = [...medicine.excipients];
-        newExcipients[index] = e.target.value;
-        setMedicine((prev) => ({ ...prev, excipients: newExcipients }));
-        setErrors((prev) => ({ ...prev, excipients: validateField("excipients", newExcipients) }));
-      }}
-    />
-    {medicine.excipients.length > 1 && (
-      <button type="button" className="bg-red-500 text-white px-2 py-1 rounded" onClick={() => removeExcipient(index)}> - </button>
-    )}
-  </div>
-))}
-<button type="button" className="bg-green-500 text-white px-2 py-1 rounded" onClick={addExcipient}> + Add </button>
-
-        <label className="block mt-4 mb-2">Medicine Type</label>
-        <Box>
-          <FormGroup>
-            {dosageOptions.map((option, index) => (
-              <FormControlLabel
-                key={index}
-                control={
-                  <Checkbox
-                    checked={medicine.types.includes(option)}
-                    onChange={() => handleCheckboxChange(option)}
-                    value={option}
-                  />
-                }
-                label={option}
-              />
-            ))}
-          </FormGroup>
-        </Box>
-
-        <label className="block mt-4 mb-2">Upload Medicine File (Any File Type)</label>
-        <input
-          type="file"
-          multiple
-          onChange={handleImageUpload}
-          className="w-full p-2 border"
-          accept="*" // Allow any file type
-        />
-
-        <label className="block mt-4 mb-2">Description</label>
-        <textarea
-          name="description"
-          className="w-full p-2 rounded"
-          rows="3"
-          value={medicine.description}
-          onChange={handleChange}
-        ></textarea>
-
-        <button
-          type="submit"
-          className="mt-4 w-full bg-blue-500 text-white py-2 rounded"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </button>
-
-        {/* Render Success and Error Message Boxes */}
->>>>>>> mavra
         <SuccessMsgBox
           open={successMsg.open}
           onClose={() => setSuccessMsg({ open: false, message: "" })}
