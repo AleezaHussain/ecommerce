@@ -210,8 +210,7 @@ const CartSideMenu = () => (
           zIndex: 1600,
         }}
       >
-        We are currently experiencing technical difficulties with our call center. For assistance,
-        please contact us via WhatsApp at 0317-1719452.
+        Rs. 100 Shipping Fees on all our Products with Tax of only 5% including GST/VAT
       </Box>
 
       {/* Main blue navbar */}
@@ -263,7 +262,8 @@ const CartSideMenu = () => (
           alignItems: 'center',
           gap: 0.5,
           textDecoration: 'none',
-          '&:hover': { textDecoration: 'underline' }
+          padding:1,
+          '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
         }}
       >
         <PersonIcon fontSize="small" />

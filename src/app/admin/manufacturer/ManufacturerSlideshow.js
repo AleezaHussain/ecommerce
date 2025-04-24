@@ -16,10 +16,12 @@ import {
   TableHead,
   TableRow,
   LinearProgress,
-  TextField 
+  TextField,
+  Chip,
+  Divider
 } from "@mui/material";
-import { getManufacturersByStatus } from "../../testingblockchain/accepted-rejected-manufacturer/fetch"; // Import the function to fetch manufacturers by status
-import axios from "axios"; // Import axios for API calls
+import { getManufacturersByStatus } from "../../testingblockchain/accepted-rejected-manufacturer/fetch";
+import axios from "axios";
 import { rejectManufacturer } from "../../../../lib/adminmanufacturerfetch";
 
 const ManufacturerSlideshow = ({
@@ -31,7 +33,7 @@ const ManufacturerSlideshow = ({
   selectedManufacturer,
   setSelectedManufacturer,
   authenticityScore,
-  setAuthenticityScore, // Ensure this prop is passed
+  setAuthenticityScore,
 }) => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filteredManufacturers, setFilteredManufacturers] = useState([]);
@@ -39,7 +41,6 @@ const ManufacturerSlideshow = ({
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const [manufacturerToReject, setManufacturerToReject] = useState(null);
 
-  // Column mapping for manufacturer details
   const columnNameMapping = {
     manufacturerName: "Manufacturer Name",
     physicalAddress: "Physical Address",
@@ -54,19 +55,17 @@ const ManufacturerSlideshow = ({
     pdfCID: "Certification PDF",
   };
 
-  // Fetch manufacturers based on activeSection
   useEffect(() => {
     const fetchManufacturers = async () => {
       try {
         const status = activeSection === "pendingManufacturers" ? "Pending" :
-                       activeSection === "acceptedManufacturers" ? "Approved" :
-                       activeSection === "rejectedManufacturers" ? "Rejected" : null;
+                     activeSection === "acceptedManufacturers" ? "Approved" :
+                     activeSection === "rejectedManufacturers" ? "Rejected" : null;
         if (status) {
           const data = await getManufacturersByStatus(status);
-          // Hardcode the status for Approved and Rejected tables
           const updatedData = data.map((manufacturer) => ({
             ...manufacturer,
-            status: status, // Override the status based on the table type
+            status: status,
           }));
           setFilteredManufacturers(updatedData);
         }
@@ -78,13 +77,11 @@ const ManufacturerSlideshow = ({
     fetchManufacturers();
   }, [activeSection]);
 
-  // Handle View Details button click
   const handleViewDetails = async (manufacturerId) => {
     const selected = filteredManufacturers.find((m) => m.tokenId === manufacturerId);
     if (selected) {
       setSelectedManufacturer(selected);
       setDetailsModalOpen(true);
-      
       if (selected.website) {
         await checkWebsiteAuthenticity(selected.website);
       } else {
@@ -92,14 +89,13 @@ const ManufacturerSlideshow = ({
       }
     }
   };
-  // Handle View PDF button click
+
   const handleViewPDF = (pdfCID) => {
     if (pdfCID) {
-      window.open(`https://ipfs.io/ipfs/${pdfCID}`, "_blank"); // Open PDF in a new tab
+      window.open(`https://ipfs.io/ipfs/${pdfCID}`, "_blank");
     }
   };
 
-  // Handle Accept/Reject button click
   const handleStatusUpdate = async (tokenId, newStatus) => {
     try {
       if (newStatus === "Approved") {
@@ -108,8 +104,6 @@ const ManufacturerSlideshow = ({
         await handleReject(tokenId);
       }
       setDetailsModalOpen(false);
-      
-      // Refresh the manufacturers list after status update
       const status = activeSection === "pendingManufacturers" ? "Pending" :
                      activeSection === "acceptedManufacturers" ? "Approved" :
                      activeSection === "rejectedManufacturers" ? "Rejected" : null;
@@ -125,20 +119,17 @@ const ManufacturerSlideshow = ({
       console.error("Error updating manufacturer status:", error);
     }
   };
-  
-  // Check website authenticity
+
   const checkWebsiteAuthenticity = async (websiteUrl) => {
     try {
-      console.log("Checking website authenticity for:", websiteUrl); // Debug
       const response = await axios.post("/api/genai/authenticmedicinewebsite", {
         website: websiteUrl,
       });
-      console.log("API Response:", response.data); // Debug
       const { probability } = response.data;
-      setAuthenticityScore(parseInt(probability, 10)); // Update the authenticity score
+      setAuthenticityScore(parseInt(probability, 10));
     } catch (error) {
-      console.error("Error checking website authenticity:", error); // Debug
-      setAuthenticityScore(0); // Set score to 0 if there's an error
+      console.error("Error checking website authenticity:", error);
+      setAuthenticityScore(0);
     }
   };
 
@@ -146,129 +137,120 @@ const ManufacturerSlideshow = ({
     setManufacturerToReject(tokenId);
     setShowRejectionDialog(true);
   };
-  const handleRejectWithComment = async (tokenId) => {
-    setManufacturerToReject(tokenId);
-    setShowRejectionDialog(true);
-  };
+
   const confirmRejection = async () => {
     try {
       const manufacturer = filteredManufacturers.find(m => m.tokenId === manufacturerToReject);
-      if (!manufacturer) {
-        throw new Error("Manufacturer not found");
-      }
-  
-      // Debug log before calling rejectManufacturer
-      console.log('Rejecting manufacturer:', {
-        walletAddress: manufacturer.walletAddress,
-        comment: rejectionComment
-      });
-  
-      await rejectManufacturer(
-        manufacturer.walletAddress,
-        rejectionComment
-      );
-  
+      if (!manufacturer) throw new Error("Manufacturer not found");
+
+      await rejectManufacturer(manufacturer.walletAddress, rejectionComment);
       await handleReject(manufacturerToReject);
-  
-      // Refresh data
-      const status = "Rejected";
-      const data = await getManufacturersByStatus(status);
-      setFilteredManufacturers(data.map(m => ({ ...m, status })));
-  
+      const data = await getManufacturersByStatus("Rejected");
+      setFilteredManufacturers(data.map(m => ({ ...m, status: "Rejected" })));
+
       setShowRejectionDialog(false);
       setRejectionComment("");
       setManufacturerToReject(null);
-  
     } catch (error) {
-      console.error("Complete rejection error:", {
-        error: error.message,
-        stack: error.stack
-      });
-      // Show user-friendly error message
-      alert(`Rejection failed: ${error.message}`);
+      console.error("Complete rejection error:", error);
     }
   };
 
-  // Determine the color of the progress bar based on the authenticity score
   const getProgressBarColor = (score) => {
-    if (score < 30) {
-      return "error"; // Red
-    } else if (score >= 30 && score < 65) {
-      return "warning"; // Yellow
-    } else {
-      return "success"; // Green
+    if (score < 30) return "error";
+    if (score >= 30 && score < 65) return "warning";
+    return "success";
+  };
+
+  const getStatusChip = (status) => {
+    switch (status) {
+      case "Approved":
+        return <Chip label="Approved" color="success" variant="outlined" />;
+      case "Pending":
+        return <Chip label="Pending" color="warning" variant="outlined" />;
+      case "Rejected":
+        return <Chip label="Rejected" color="error" variant="outlined" />;
+      default:
+        return <Chip label={status} variant="outlined" />;
     }
   };
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "calc(100vh - 390px)",
-        overflowY: "auto",
-        bgcolor: "#ffffff",
-        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-        zIndex: 1200,
-        padding: "20px",
-        marginLeft: "20px",
-        position: "relative",
-      }}
-    >
-      {/* Table View for Manufacturers */}
-      <TableContainer component={Paper}>
-        <Table>
+    <Box sx={{ width: "100%", overflowY: "auto" }}>
+      <TableContainer component={Paper} elevation={3} sx={{ borderRadius: 2 }}>
+        <Table >
           <TableHead>
-            <TableRow>
-              <TableCell>Manufacturer Name</TableCell>
-              <TableCell>License Number</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
+            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableCell align="center" sx={{ fontWeight: "bold" }}>Manufacturer Name</TableCell>
+              <TableCell align="center" sx={{ fontWeight: "bold" }}>License Number</TableCell>
+              <TableCell align="center" sx={{ fontWeight: "bold" }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: "bold" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredManufacturers.map((manufacturer) => (
-              <TableRow key={manufacturer.tokenId}>
-                <TableCell>{manufacturer.manufacturerName}</TableCell>
-                <TableCell>{manufacturer.licenceNo}</TableCell>
-                <TableCell>{manufacturer.status}</TableCell>
-                <TableCell>
-  <Button
-    variant="contained"
-    onClick={() => handleViewDetails(manufacturer.tokenId)}
-    sx={{ backgroundColor: "#016A70", color: "#fff", mr: 1 }}
-  >
-    View Details
-  </Button>
-</TableCell>
+              <TableRow key={manufacturer.tokenId} hover>
+                <TableCell align="center">{manufacturer.manufacturerName}</TableCell>
+                <TableCell align="center">{manufacturer.licenceNo}</TableCell>
+                <TableCell align="center">{getStatusChip(manufacturer.status)}</TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="contained"
+                    onClick={() => handleViewDetails(manufacturer.tokenId)}
+                    sx={{
+                      backgroundColor: "#002F6C",
+                      color: "#fff",
+                      '&:hover': {
+                        backgroundColor: "#001F4D"
+                      }
+                    }}
+                  >
+                    View Details
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Details Modal */}
       <Dialog
         open={detailsModalOpen}
         onClose={() => setDetailsModalOpen(false)}
         fullWidth
-        maxWidth="md" // Ensure the modal is wide enough
+        maxWidth="md"
+        sx={{
+          zIndex: 1700,
+          borderRadius:50,
+          // Higher than NavBar's z-index (1600)
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0,0,0,0.7)',
+             // Optional: darker backdrop
+          }
+        }}
+        
       >
-        <DialogTitle>Manufacturer Details</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: "#002F6C", color: "white" }}>
+          Manufacturer Details
+        </DialogTitle>
+        <DialogContent dividers>
           {selectedManufacturer && (
-            <Box>
-              {/* Manufacturer Details */}
-              {Object.entries(selectedManufacturer).map(([key, value]) => {
-                if (key === "tokenId" || key === "walletAddress") return null;
+            <Box sx={{ mt: 2 }}>
+              <Box sx={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", 
+                gap: 3 
+              }}>
+                {Object.entries(selectedManufacturer).map(([key, value]) => {
+                  if (key === "tokenId" || key === "walletAddress") return null;
 
-                const columnName = columnNameMapping[key] || key;
+                  const columnName = columnNameMapping[key] || key;
 
-                return (
-                  <Box key={key} sx={{ mb: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "#016A70" }}>
-                      {columnName}
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: "#555" }}>
+                  return (
+                    <Box key={key}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#002F6C" }}>
+                        {columnName}
+                      </Typography>
                       {key === "website" ? (
                         value ? (
                           <a
@@ -284,62 +266,79 @@ const ManufacturerSlideshow = ({
                         )
                       ) : key === "pdfCID" ? (
                         <Button
-                          variant="contained"
+                          variant="outlined"
                           onClick={() => handleViewPDF(value)}
-                          sx={{ backgroundColor: "#016A70", color: "#fff" }}
+                          sx={{ 
+                            mt: 1,
+                            color: "#002F6C",
+                            borderColor: "#002F6C",
+                            '&:hover': {
+                              backgroundColor: "#002F6C",
+                              color: "white"
+                            }
+                          }}
                         >
                           View PDF
                         </Button>
                       ) : (
-                        value
+                        <Typography variant="body1" sx={{ color: "#555" }}>
+                          {value || "N/A"}
+                        </Typography>
                       )}
-                    </Typography>
-                  </Box>
-                );
-              })}
+                    </Box>
+                  );
+                })}
+              </Box>
 
-              {/* Website Authenticity Score and Progress Bar */}
               {selectedManufacturer.website && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "#016A70" }}>
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#002F6C" }}>
                     Website Authenticity Score
                   </Typography>
-                  <Typography variant="body1" sx={{ color: "#555", mb: 1 }}>
-                    {authenticityScore !== null ? `${authenticityScore}%` : "Calculating..."}
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={authenticityScore || 0}
-                    color={getProgressBarColor(authenticityScore)}
-                    sx={{
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: "#e0e0e0", // Light gray background for the progress bar
-                      "& .MuiLinearProgress-bar": {
-                        borderRadius: 5, // Rounded corners for the progress bar
-                      },
-                    }}
-                  />
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Typography variant="body1" sx={{ color: "#555" }}>
+                      {authenticityScore !== null ? `${authenticityScore}%` : "Calculating..."}
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={authenticityScore || 0}
+                      color={getProgressBarColor(authenticityScore)}
+                      sx={{
+                        flexGrow: 1,
+                        height: 10,
+                        borderRadius: 5,
+                      }}
+                    />
+                  </Box>
                 </Box>
               )}
 
-              {/* Show Accept/Reject buttons only for Pending manufacturers in the modal */}
               {activeSection === "pendingManufacturers" && selectedManufacturer.status === "Pending" && (
-                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
                   <Button
-            variant="contained"
-            onClick={() => handleStatusUpdate(selectedManufacturer.tokenId, "Approved")}
-            sx={{ backgroundColor: "#00C851", color: "#fff" }}
-          >
-            Accept
-          </Button>
-          <Button
-    variant="contained"
-    onClick={() => handleRejectClick(selectedManufacturer.tokenId)}
-    sx={{ backgroundColor: "#ff4444", color: "#fff" }}
-  >
-    Reject
-  </Button>
+                    variant="contained"
+                    onClick={() => handleStatusUpdate(selectedManufacturer.tokenId, "Approved")}
+                    sx={{ 
+                      backgroundColor: "#2E7D32",
+                      '&:hover': {
+                        backgroundColor: "#1B5E20"
+                      }
+                    }}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => handleRejectClick(selectedManufacturer.tokenId)}
+                    sx={{ 
+                      backgroundColor: "#d32f2f",
+                      '&:hover': {
+                        backgroundColor: "#b71c1c"
+                      }
+                    }}
+                  >
+                    Reject
+                  </Button>
                 </Box>
               )}
             </Box>
@@ -349,6 +348,7 @@ const ManufacturerSlideshow = ({
           <Button onClick={() => setDetailsModalOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
       <Dialog
         open={showRejectionDialog}
         onClose={() => {
@@ -356,30 +356,37 @@ const ManufacturerSlideshow = ({
           setRejectionComment("");
         }}
       >
-        <DialogTitle>Add Rejection Reason</DialogTitle>
+        <DialogTitle>Rejection Reason</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Rejection Comments"
+            label="Comments"
             fullWidth
-            variant="standard"
+            variant="outlined"
             multiline
             rows={4}
             value={rejectionComment}
             onChange={(e) => setRejectionComment(e.target.value)}
+            sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
-  <Button onClick={() => setShowRejectionDialog(false)}>Cancel</Button>
-  <Button 
-    onClick={confirmRejection}
-    color="error"
-    disabled={!rejectionComment.trim()}
-  >
-    Confirm Rejection
-  </Button>
-</DialogActions>
+          <Button 
+            onClick={() => setShowRejectionDialog(false)}
+            sx={{ color: "#016A70" }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={confirmRejection}
+            color="error"
+            disabled={!rejectionComment.trim()}
+            variant="contained"
+          >
+            Confirm Rejection
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

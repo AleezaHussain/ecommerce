@@ -91,6 +91,8 @@ export const InfoMsgBox = ({ open, onClose, message }) => {
       autoHideDuration={6000} // Auto-close after 6 seconds
       onClose={onClose}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      sx={{ zIndex: 2000 }} // Ensures it appears on top of modal
+
     >
       <Alert
         onClose={onClose}

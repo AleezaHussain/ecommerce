@@ -13,15 +13,15 @@
 
 
 
-// <NavBar loginButton={true}  />
+<NavBar loginButton={true}  />
 
 // const LandingPage = () => {
 
  
-//   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-//   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
-//   const [itemWidth, setItemWidth] = useState(100);
-//   const testimonialContainerRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
+  const [itemWidth, setItemWidth] = useState(100);
+  const testimonialContainerRef = useRef(null);
 
 //   // Features section data
 //   const features = [
@@ -139,33 +139,33 @@
 //     }
 //   ];
 
-//   // Doctors section data
-//   const doctors = [
-//     {
-//       id: 1,
-//       name: "Dr. Sarah Johnson",
-//       specialty: "Cardiologist",
-//       image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-//     },
-//     {
-//       id: 2,
-//       name: "Dr. Michael Chen",
-//       specialty: "Neurologist",
-//       image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-//     },
-//     {
-//       id: 3,
-//       name: "Dr. Emily Rodriguez",
-//       specialty: "Pediatrician",
-//       image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-//     },
-//     {
-//       id: 4,
-//       name: "Dr. James Wilson",
-//       specialty: "Orthopedic Surgeon",
-//       image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-//     }
-//   ];
+  // Doctors section data
+  const doctors = [
+    {
+      id: 1,
+      name: "Dr. Sarah Johnson",
+      specialty: "Cardiologist",
+      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      id: 2,
+      name: "Dr. Michael Chen",
+      specialty: "Neurologist",
+      image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      id: 3,
+      name: "Dr. Emily Rodriguez",
+      specialty: "Pediatrician",
+      image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      id: 4,
+      name: "Dr. James Wilson",
+      specialty: "Orthopedic Surgeon",
+      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+    }
+  ];
 
 //   // Testimonials section data
 //   const testimonials = [
@@ -613,69 +613,69 @@
 //           </div>
 //         </section>
         
-//         {/* Doctors Section */}
-//         <section id="doctors" className="py-16 bg-gray-100">
-//           <div className="container mx-auto px-4">
-//             <div className="text-center mb-12">
-//               <p className="text-primary font-medium mb-2">Our Medical Team</p>
-//               <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
-//                 Meet Our Expert Doctors
-//               </h2>
-//               <div className="w-24 h-1 bg-[#FF6B6B] mx-auto mt-4"></div>
-//             </div>
+        {/* Doctors Section */}
+        <section id="doctors" className="py-16 bg-gray-100">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <p className="text-primary font-medium mb-2">Our Medical Team</p>
+              <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
+                Meet Our Expert Doctors
+              </h2>
+              <div className="w-24 h-1 bg-[#FF6B6B] mx-auto mt-4"></div>
+            </div>
             
-//             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-//               {doctors.map((doctor) => (
-//                 <div 
-//                   key={doctor.id} 
-//                   className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg group"
-//                 >
-//                   <div className="h-64 overflow-hidden relative">
-//                     <img 
-//                       src={doctor.image} 
-//                       alt={doctor.name} 
-//                       className="w-full h-full object-cover"
-//                     />
-//                     <div className="absolute inset-0 bg-primary/80 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-//                       <a href="#" className="text-white hover:text-[#FF6B6B]">
-//                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-//                           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-//                         </svg>
-//                       </a>
-//                       <a href="#" className="text-white hover:text-[#FF6B6B]">
-//                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-//                           <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-//                         </svg>
-//                       </a>
-//                       <a href="#" className="text-white hover:text-[#FF6B6B]">
-//                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-//                           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-//                           <rect width="4" height="12" x="2" y="9"></rect>
-//                           <circle cx="4" cy="4" r="2"></circle>
-//                         </svg>
-//                       </a>
-//                     </div>
-//                   </div>
-//                   <div className="p-4 text-center">
-//                     <h3 className="text-xl font-bold font-heading text-gray-800">{doctor.name}</h3>
-//                     <p className="text-primary mb-2">{doctor.specialty}</p>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         </section>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {doctors.map((doctor) => (
+                <div 
+                  key={doctor.id} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg group"
+                >
+                  <div className="h-64 overflow-hidden relative">
+                    <img 
+                      src={doctor.image} 
+                      alt={doctor.name} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-primary/80 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <a href="#" className="text-white hover:text-[#FF6B6B]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg>
+                      </a>
+                      <a href="#" className="text-white hover:text-[#FF6B6B]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                          <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+                        </svg>
+                      </a>
+                      <a href="#" className="text-white hover:text-[#FF6B6B]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                          <rect width="4" height="12" x="2" y="9"></rect>
+                          <circle cx="4" cy="4" r="2"></circle>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                  <div className="p-4 text-center">
+                    <h3 className="text-xl font-bold font-heading text-gray-800">{doctor.name}</h3>
+                    <p className="text-primary mb-2">{doctor.specialty}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
         
-//         {/* Testimonials Section */}
-//         <section id="testimonials" className="py-16 bg-primary/5">
-//           <div className="container mx-auto px-4">
-//             <div className="text-center mb-12">
-//               <p className="text-primary font-medium mb-2">Patient Testimonials</p>
-//               <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
-//                 What Our Patients Say
-//               </h2>
-//               <div className="w-24 h-1 bg-[#FF6B6B] mx-auto mt-4"></div>
-//             </div>
+        {/* Testimonials Section */}
+        <section id="testimonials" className="py-16 bg-primary/5">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <p className="text-primary font-medium mb-2">Patient Testimonials</p>
+              <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800">
+                What Our Patients Say
+              </h2>
+              <div className="w-24 h-1 bg-[#FF6B6B] mx-auto mt-4"></div>
+            </div>
             
 //             <div className="relative">
 //               <div 

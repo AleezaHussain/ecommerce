@@ -28,12 +28,19 @@ export default async function handler(req, res) {
 
     if (!isValid) {
       const medicine = await contract.medicines(tokenId);
+      const tokenURI = await contract.tokenURI(tokenId);
+      const ipfsUrl = `https://ipfs.io/ipfs/${tokenURI}`;
+      const metadataResponse = await fetch(ipfsUrl);
+      const ipfsData = await metadataResponse.json();
+    
       return res.status(403).end(JSON.stringify({
         message: "Medicine exists but not approved",
         existsOnChain: true,
-        status: medicine.status
+        status: medicine.status,
+        name: ipfsData.name,
       }, replacer));
     }
+    
 
     const { data, error } = await supabase
       .from("sale_medicine")
@@ -41,23 +48,30 @@ export default async function handler(req, res) {
       .eq("medicine_id", tokenId.toString())
       .single();
 
-    if (error) {
-      return res.status(200).end(JSON.stringify({
-        message: "Verified on blockchain but not in DB",
-        tokenId,
-        ipfsHash,
-        status: "Accepted"
-      }, replacer));
-    }
-
-    return res.status(200).end(JSON.stringify({
-      ...data,
-      tokenId,
-      status: "Accepted"
-    }, replacer));
+      if (error) {
+        const metadata = await contract.medicines(tokenId); // 👈 Get on-chain data
+        const tokenURI = await contract.tokenURI(tokenId);
+        const ipfsUrl = `https://ipfs.io/ipfs/${tokenURI}`;
+        const metadataResponse = await fetch(ipfsUrl);
+        const ipfsData = await metadataResponse.json();
+      
+        return res.status(200).end(JSON.stringify({
+          message: "Verified on blockchain but not in DB",
+          tokenId,
+          ipfsHash,
+          status: "Accepted",
+          name: ipfsData.name,
+          description: ipfsData.description,
+          image_url: ipfsData.image_url,
+        }, replacer));
+      }
+      
 
   } catch (err) {
     console.error("Error verifying hash:", err);
     return res.status(500).json({ message: err.message });
   }
 }
+
+
+

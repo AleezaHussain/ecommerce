@@ -73,18 +73,39 @@ export function CartProvider({ children }) {
 
   const saveUserCart = async (items) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token');
+  
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ items })
       });
-      
-      if (!response.ok) throw new Error('Failed to save cart');
+  
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        console.error('Failed to parse JSON:', text);
+        throw new Error('Invalid server response');
+      }
+  
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save cart');
+      }
+  
+      return data;
     } catch (error) {
-      console.error("Error saving user cart:", error);
+      console.error("Cart save error:", error);
+      // Fallback to local storage for guest users
+      if (!userId) {
+        localStorage.setItem('pharmacy-guest-cart', JSON.stringify(items));
+        return { success: true };
+      }
       throw error;
     }
   };

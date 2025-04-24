@@ -11,42 +11,48 @@ const PieChart = ({ pending, accepted, rejected }) => {
   const outerRadius = 90; // Outer edge of the first ring
   const thickness = 40; // Fixed thickness for each ring
 
+  // Color definitions (matching the legend colors)
+  const pendingColor = "#1976d2"; // Blue
+  const acceptedColor = "#2E7D32"; // Green
+  const rejectedColor = "#d32f2f"; // Red
+  const greyColor = "#ededed"; // Grey for background
+
   const datasets = [
     {
       label: "Pending",
       data: [pending, total - pending],
-      backgroundColor: ["#059212", "#ededed"], // Pastel Blue + Grey
+      backgroundColor: [pendingColor, greyColor],
       borderWidth: 3,
       borderRadius: 10,
       borderAlign: "inner",
-      circumference: 360, // Full circle
-      cutout: `${outerRadius - 1 * thickness}%`, // Outer ring
-      hoverBackgroundColor: ["#A3C4F3", "#ededed"], // Disable hover color change
-      hoverBorderWidth: 0, // Disable hover border
+      circumference: 360,
+      cutout: `${outerRadius - 1 * thickness}%`,
+      hoverBackgroundColor: [pendingColor, greyColor],
+      hoverBorderWidth: 0,
     },
     {
       label: "Accepted",
       data: [accepted, total - accepted],
-      backgroundColor: ["#982176", "#ededed"], // Pastel Orange + Grey
+      backgroundColor: [acceptedColor, greyColor],
       borderWidth: 3,
       borderRadius: 10,
       borderAlign: "inner",
-      circumference: 360, // Full circle
-      cutout: `${outerRadius - 1 * thickness}%`, // Middle ring
-      hoverBackgroundColor: ["#FFD699", "#ededed"], // Disable hover color change
-      hoverBorderWidth: 0, // Disable hover border
+      circumference: 360,
+      cutout: `${outerRadius - 1 * thickness}%`,
+      hoverBackgroundColor: [acceptedColor, greyColor],
+      hoverBorderWidth: 0,
     },
     {
       label: "Rejected",
       data: [rejected, total - rejected],
-      backgroundColor: ["#F5004F", "#ededed"], // Pastel Red + Grey
+      backgroundColor: [rejectedColor, greyColor],
       borderWidth: 3,
       borderRadius: 10,
       borderAlign: "inner",
-      circumference: 360, // Full circle
-      cutout: `${outerRadius - 1 * thickness}%`, // Inner ring
-      hoverBackgroundColor: ["#FFA8A8", "#ededed"], // Disable hover color change
-      hoverBorderWidth: 0, // Disable hover border
+      circumference: 360,
+      cutout: `${outerRadius - 1 * thickness}%`,
+      hoverBackgroundColor: [rejectedColor, greyColor],
+      hoverBorderWidth: 0,
     },
   ];
 
@@ -57,18 +63,17 @@ const PieChart = ({ pending, accepted, rejected }) => {
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, // Allow the chart to stretch
-    rotation: 0, // Align rings properly
-    circumference: 360, // Ensures full rings
+    maintainAspectRatio: false,
+    rotation: 0,
+    circumference: 360,
     plugins: {
-      legend: { display: false }, // Hide default legend
+      legend: { display: false },
       tooltip: {
-        enabled: false, // Disable tooltips on hover
+        enabled: false,
       },
     },
-    // Disable hover effects globally
     hover: {
-      mode: null, // Disable hover mode
+      mode: null,
     },
   };
 

@@ -15,7 +15,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 
-const NavBar = ({ loginButton, walletStatus, manufacturerDetails, onLogout }) => {
+const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, onLogout }) => {
   const pathname = usePathname();
   const router = useRouter();
   const isLandingPage = pathname === "/";
@@ -23,6 +23,7 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, onLogout }) =>
   const isManufacturerLogin = pathname === "/manufacturerlogin";
   const isLoginPage = ["/manufacturerlogin", "/userlogin", "/adminlogin"].includes(pathname);
   const isManufacturerDashboard = pathname?.startsWith("/manufacturerdashboard");
+  const isAdminDashboard = pathname?.startsWith("/admin");
   const isProfilePage = pathname === "/manufacturerdashboard/manufacturerprofile";
   const [loginAnchorEl, setLoginAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -49,6 +50,12 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, onLogout }) =>
     router.push(path);
     handleLoginClose();
     window.scrollTo(0, 0);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminName");
+    router.push("/adminlogin"); // Changed from window.location.href to router.push
   };
 
   return (
@@ -140,9 +147,100 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, onLogout }) =>
           display: "flex", 
           gap: 2, 
           alignItems: "center",
-          position: "relative", // Ensure consistent positioning
-          right: 0 // Align to the right
+          position: "relative",
+          right: 0
         }}>
+          {/* Show profile and logout when admin is logged in */}
+          {adminDetails && isAdminDashboard && (
+            <>
+              <IconButton
+                onClick={handleProfileClick}
+                sx={{ 
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.1)"
+                  },
+                  marginLeft: 'auto'
+                }}
+              >
+                <Avatar 
+                  sx={{ 
+                    width: 40, 
+                    height: 40,
+                    bgcolor: "#1976d2"
+                  }}
+                >
+                  {adminDetails?.name?.charAt(0) || <PersonIcon />}
+                </Avatar>
+              </IconButton>
+
+              <Menu
+                anchorEl={profileAnchorEl}
+                open={openProfileMenu}
+                onClose={handleProfileClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                PaperProps={{
+                  elevation: 8,
+                  sx: {
+                    width: 320,
+                    maxWidth: '100%',
+                    borderRadius: '12px',
+                    mt: 1.5,
+                    overflow: 'visible',
+                    '&:before': {
+                      content: '""',
+                      display: 'block',
+                      position: 'absolute',
+                      top: 0,
+                      right: 14,
+                      width: 10,
+                      height: 10,
+                      bgcolor: 'background.paper',
+                      transform: 'translateY(-50%) rotate(45deg)',
+                      zIndex: 0,
+                    },
+                  },
+                }}
+              >
+<Box sx={{ p: 2 }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <Avatar sx={{ width: 56, height: 56, bgcolor: "#1976d2", fontSize: '1.5rem' }}>
+      A {/* Just show 'A' for Admin */}
+    </Avatar>
+    <Box>
+      <Typography variant="subtitle1" fontWeight={600}>
+        Admin
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {adminDetails?.email || "No email"}
+      </Typography>
+    </Box>
+  </Box>
+</Box>
+
+                <Divider />
+
+              
+
+                <MenuItem 
+  onClick={handleLogout}
+  sx={{ py: 1.5 }}
+>
+  <LogoutIcon sx={{ mr: 2, color: 'action.active' }} />
+  <Typography variant="body1">Logout</Typography>
+</MenuItem>
+
+              </Menu>
+            </>
+          )}
+
           {/* Show profile and logout when manufacturer is logged in */}
           {(walletStatus?.approved && isManufacturerDashboard) && (
             <>
@@ -153,7 +251,7 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, onLogout }) =>
                   "&:hover": {
                     backgroundColor: "rgba(255, 255, 255, 0.1)"
                   },
-                  marginLeft: 'auto' // Push to the right
+                  marginLeft: 'auto'
                 }}
               >
                 <Avatar 
@@ -295,36 +393,36 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, onLogout }) =>
           )}
 
           {/* Login Options Button (shown on landing page and all login pages) */}
-          {(isLandingPage || isLoginPage || isManufacturerReg) && !walletStatus?.approved && (
-            <Button
-              variant="contained"
-              startIcon={<AccountCircleIcon />}
-              sx={{ 
-                backgroundColor: "#004b8d", 
-                color: "#fff", 
-                "&:hover": { 
-                  backgroundColor: "#003366",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)"
-                },
-                fontWeight: 600,
-                px: 3,
-                py: 1,
-                borderRadius: "6px",
-                textTransform: "none",
-                fontSize: "0.9rem",
-                transition: "all 0.2s ease",
-                minWidth: "140px",
-                height: "40px"
-              }}
-              onClick={handleLoginClick}
-              aria-label="Login options"
-              aria-controls="login-menu"
-              aria-haspopup="true"
-            >
-              Login User
-            </Button>
-          )}
+{(isLandingPage || isLoginPage || isManufacturerReg) && !walletStatus?.approved && !adminDetails && (
+  <Button
+    variant="contained"
+    startIcon={<AccountCircleIcon />}
+    sx={{ 
+      backgroundColor: "#004b8d", 
+      color: "#fff", 
+      "&:hover": { 
+        backgroundColor: "#003366",
+        transform: "translateY(-2px)",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)"
+      },
+      fontWeight: 600,
+      px: 3,
+      py: 1,
+      borderRadius: "6px",
+      textTransform: "none",
+      fontSize: "0.9rem",
+      transition: "all 0.2s ease",
+      minWidth: "140px",
+      height: "40px"
+    }}
+    onClick={handleLoginClick}
+    aria-label="Login options"
+    aria-controls="login-menu"
+    aria-haspopup="true"
+  >
+    Login User
+  </Button>
+)}
         </Box>
 
         {/* Login Menu (shown on landing page and all login pages) */}

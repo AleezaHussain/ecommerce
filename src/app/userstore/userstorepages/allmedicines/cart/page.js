@@ -73,7 +73,8 @@ export default function CartPage() {
                 onClick={() => router.push('/userstore/userstorepages/allmedicines')}
                 sx={{
                   backgroundColor: '#002F6C',
-                  '&:hover': { backgroundColor: '#014E50' },
+                  '&:hover': { bgcolor: '#00224E' },
+              py: 1.5
                 }}
               >
                 Continue Shopping
@@ -184,8 +185,8 @@ export default function CartPage() {
                     fullWidth
                     sx={{
                       backgroundColor: '#002F6C',
-                      '&:hover': { backgroundColor: '#014E50' },
-                      py: 1.5
+                      '&:hover': { bgcolor: '#00224E' },
+              py: 1.5
                     }}
                     onClick={() => router.push('/userstore/userstorepages/allmedicines/checkout')}
                   >

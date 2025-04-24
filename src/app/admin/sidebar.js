@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
@@ -7,274 +7,108 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Collapse,
+  Divider,
+  styled,
 } from "@mui/material";
-import Image from "next/image";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
 import FactoryIcon from "@mui/icons-material/Factory";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
-import PeopleIcon from "@mui/icons-material/People";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PendingIcon from "@mui/icons-material/Pending";
-import CancelIcon from "@mui/icons-material/Cancel";
-import QrCodeIcon from "@mui/icons-material/QrCode";
-import PersonIcon from "@mui/icons-material/Person";
-import AnalyticsIcon from "@mui/icons-material/Analytics"; // Import Analytics icon
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
-const Sidebar = ({ handleSectionChange, activeDashboard }) => {
-  const [openManufacturers, setOpenManufacturers] = useState(false);
-  const [openMedicines, setOpenMedicines] = useState(false);
-  const [openUsers, setOpenUsers] = useState(false);
+const SidebarButton = styled(ListItemButton)(({ theme }) => ({
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+    borderRadius: theme.shape.borderRadius,
+  },
+  '&.Mui-selected': {
+    backgroundColor: theme.palette.action.selected,
+    borderLeft: `4px solid ${theme.palette.primary.main}`,
+  },
+}));
 
-  const handleManufacturersClick = () => {
-    setOpenManufacturers(!openManufacturers);
+const Sidebar = ({
+  handleSectionChange,
+  activeTab,
+  handleTabChange,  // This should receive the function
+  activeSection,
+}) => {
+  const handleManufacturerClick = () => {
+    handleTabChange(0);  // Should call the parent's function
+    handleSectionChange("pendingManufacturers");
   };
 
-  const handleMedicinesClick = () => {
-    setOpenMedicines(!openMedicines);
+  const handleMedicineClick = () => {
+    handleTabChange(1);  // Should call the parent's function
+    handleSectionChange("pendingMedicines");
   };
 
-  const handleUsersClick = () => {
-    setOpenUsers(!openUsers);
+  const handleDashboardClick = () => {
+    handleTabChange(0);  // Should call the parent's function
+    handleSectionChange("dashboard");
   };
+
 
   return (
     <Box
       sx={{
         position: "fixed",
-        top: "60px",
+        top: 120,
         left: 0,
-        width: "220px",
-        height: "calc(100vh - 60px)",
-        bgcolor: "#EEF2F6",
-        zIndex: 1400,
+        width: "280px",
+        height: "100%",
+        bgcolor: "background.paper",
+        zIndex: 1200,
         overflowY: "auto",
+        boxShadow: 3,
       }}
     >
-      {/* Sidebar Content */}
-      <Typography
-        variant="h6"
-        sx={{
-          p: 2,
-          fontWeight: "bold",
-          color: "#016A70",
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <Image src="/healthcare (1).png" alt="Logo" width={50} height={50} />
-        MediCare Admin
-      </Typography>
+      {/* Sidebar Header */}
+      <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
+          PharmaGuard 24/7 Admin
+        </Typography>
+      </Box>
 
+      <Divider />
+
+      {/* Dashboard Link */}
       <List>
-        {/* Manufacturers Dropdown */}
         <ListItem disablePadding>
-          <ListItemButton
-            onClick={handleManufacturersClick}
-            sx={{
-              "&:hover": {
-                bgcolor: "#B2EBF2",
-                borderRadius: "8px",
-              },
-            }}
+          <SidebarButton
+            onClick={handleDashboardClick}
+            selected={activeTab === 0 && activeSection === "dashboard"}
           >
-            <FactoryIcon sx={{ mr: 2, color: "#016A70" }} />
+            <DashboardIcon sx={{ mr: 2, color: "primary.main" }} />
+            <ListItemText primary="Dashboard" />
+          </SidebarButton>
+        </ListItem>
+      </List>
+
+      <Divider sx={{ my: 1 }} />
+
+      {/* Manufacturers Section */}
+      <List>
+        <ListItem disablePadding>
+          <SidebarButton
+            onClick={handleManufacturerClick}
+            selected={activeTab === 0}
+          >
+            <FactoryIcon sx={{ mr: 2, color: "primary.main" }} />
             <ListItemText primary="Manufacturers" />
-            {openManufacturers ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
+          </SidebarButton>
         </ListItem>
-        {/* Nested Dropdown for Manufacturers */}
-        <Collapse in={openManufacturers} timeout="auto" unmountOnExit>
-          <List sx={{ pl: 4 }}>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("acceptedManufacturers")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <CheckCircleIcon sx={{ mr: 2, color: "#2E7D32" }} />
-                <ListItemText primary="Accepted" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("pendingManufacturers")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <PendingIcon sx={{ mr: 2, color: "#EF6C00" }} />
-                <ListItemText primary="Pending" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("rejectedManufacturers")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <CancelIcon sx={{ mr: 2, color: "#D32F2F" }} />
-                <ListItemText primary="Rejected" />
-              </ListItemButton>
-            </ListItem>
-            {/* Analytics for Manufacturers */}
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("manufacturerAnalytics")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <AnalyticsIcon sx={{ mr: 2, color: "#016A70" }} />
-                <ListItemText primary="Analytics" />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Collapse>
+      </List>
 
-        {/* Medicines Dropdown */}
+      {/* Medicines Section */}
+      <List>
         <ListItem disablePadding>
-          <ListItemButton
-            onClick={handleMedicinesClick}
-            sx={{
-              "&:hover": {
-                bgcolor: "#B2EBF2",
-                borderRadius: "8px",
-              },
-            }}
+          <SidebarButton
+            onClick={handleMedicineClick}
+            selected={activeTab === 1}
           >
-            <MedicalServicesIcon sx={{ mr: 2, color: "#016A70" }} />
+            <MedicalServicesIcon sx={{ mr: 2, color: "primary.main" }} />
             <ListItemText primary="Medicines" />
-            {openMedicines ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
+          </SidebarButton>
         </ListItem>
-        {/* Nested Dropdown for Medicines */}
-        <Collapse in={openMedicines} timeout="auto" unmountOnExit>
-          <List sx={{ pl: 4 }}>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("acceptedMedicines")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <CheckCircleIcon sx={{ mr: 2, color: "#2E7D32" }} />
-                <ListItemText primary="Accepted" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("pendingMedicines")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <PendingIcon sx={{ mr: 2, color: "#EF6C00" }} />
-                <ListItemText primary="Pending" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("rejectedMedicines")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <CancelIcon sx={{ mr: 2, color: "#D32F2F" }} />
-                <ListItemText primary="Rejected" />
-              </ListItemButton>
-            </ListItem>
-            {/* Analytics for Medicines */}
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("medicineAnalytics")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <AnalyticsIcon sx={{ mr: 2, color: "#016A70" }} />
-                <ListItemText primary="Analytics" />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Collapse>
-
-        {/* Users Dropdown */}
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={handleUsersClick}
-            sx={{
-              "&:hover": {
-                bgcolor: "#B2EBF2",
-                borderRadius: "8px",
-              },
-            }}
-          >
-            <PeopleIcon sx={{ mr: 2, color: "#016A70" }} />
-            <ListItemText primary="Users" />
-            {openUsers ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-        </ListItem>
-        {/* Nested Dropdown for Users */}
-        <Collapse in={openUsers} timeout="auto" unmountOnExit>
-          <List sx={{ pl: 4 }}>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("qrCodes")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <QrCodeIcon sx={{ mr: 2, color: "#016A70" }} />
-                <ListItemText primary="QR Codes" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleSectionChange("userProfiles")}
-                sx={{
-                  "&:hover": {
-                    bgcolor: "#B2EBF2",
-                    borderRadius: "8px",
-                  },
-                }}
-              >
-                <PersonIcon sx={{ mr: 2, color: "#016A70" }} />
-                <ListItemText primary="User Profiles" />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Collapse>
       </List>
     </Box>
   );

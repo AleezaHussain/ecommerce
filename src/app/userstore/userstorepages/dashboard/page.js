@@ -64,30 +64,59 @@ export default function Dashboard() {
 
   const fetchUserOrders = async (userId) => {
     try {
-      // This would be replaced with your actual API call
-      // const response = await fetch(`/api/orders?userId=${userId}`);
-      // const data = await response.json();
-      // setOrders(data.orders);
-      
-      // Mock data for demonstration
-      setOrders([
-        {
-          id: 'ORD-12345',
-          date: new Date().toISOString(),
-          total: 1200,
-          status: 'Delivered',
-          items: cart.length > 0 ? cart : [
-            { name: 'Sample Medicine', quantity: 2, price: 500 }
-          ]
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+  
+      const response = await fetch('/api/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ]);
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch orders (status ${response.status})`);
+      }
+  
+      const data = await response.json();
+      
+      // Ensure we're handling the response structure correctly
+      if (data.orders) {
+        setOrders(data.orders);
+      } else if (Array.isArray(data)) {
+        // Fallback for different response structure
+        setOrders(data);
+      } else {
+        throw new Error('Invalid orders data format');
+      }
       
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('Error fetching orders:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      
       setLoading(false);
+      
+      // Fallback to mock data if API fails (for development)
+      setOrders([
+        {
+          id: 'NULL',
+          date: new Date().toISOString(),
+          total: 0,
+          status: 'Pending',
+          items: cart.length > 0 ? cart : [
+            { name: 'Sample Medicine', quantity: 0, price: 0 }
+          ]
+        }
+      ]);
     }
   };
+  
 
   const formatCurrency = (amount) => {
     return `Rs. ${amount.toFixed(2)}`;
@@ -159,11 +188,15 @@ export default function Dashboard() {
                           <strong>Order #:</strong> {order.id}
                         </Typography>
                         <Typography variant="subtitle1">
-                          <strong>Date:</strong> {formatDate(order.date)}
-                        </Typography>
-                        <Typography variant="subtitle1">
-                          <strong>Total:</strong> {formatCurrency(order.total)}
-                        </Typography>
+  <strong>Date:</strong> {formatDate(order.created_at)}
+</Typography>
+<Typography variant="subtitle1">
+  <strong>Total:</strong> {formatCurrency(
+    order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  )}
+</Typography>
+
+
                         <Typography variant="subtitle1">
                           <strong>Status:</strong> {order.status}
                         </Typography>
@@ -177,9 +210,11 @@ export default function Dashboard() {
                           <Typography variant="body2">
                             {item.name} × {item.quantity}
                           </Typography>
-                          <Typography variant="body2">
-                            {formatCurrency(item.price * item.quantity)}
+                          <Typography variant="body2" sx={{ mt: 1, mb: 1, fontWeight: 'normal' }}>
+                        Rs.  
+                          {item.price}
                           </Typography>
+
                         </Box>
                       ))}
 

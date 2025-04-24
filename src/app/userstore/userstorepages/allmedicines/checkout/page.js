@@ -921,8 +921,10 @@ const handlePlaceOrder = async () => {
       shippingInfo: shippingData,
       paymentMethod: selectedPaymentMethod,
       total: orderSummary.total,
-      userId: user?.id || null // Include user ID if authenticated
+      userId: user?.id || null
     };
+
+    console.log('Submitting order with data:', orderData); // Debug log
 
     // Submit order
     const response = await fetch('/api/orders', {
@@ -934,36 +936,32 @@ const handlePlaceOrder = async () => {
       body: JSON.stringify(orderData)
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to place order');
+    const responseText = await response.text();
+    let responseData;
+    try {
+      responseData = responseText ? JSON.parse(responseText) : {};
+    } catch (e) {
+      console.error('Failed to parse JSON response:', responseText);
+      throw new Error('Invalid server response');
     }
 
-    // Decrement quantities
-    const decrementResults = await batchDecrementQuantities(
-      cart.map(item => ({
-        medicine_id: item.medicine_id,
-        quantity: item.quantity,
-        wallet_address: item.wallet_address
-      }))
-    );
-
-    const failedItems = decrementResults.filter(result => !result.success);
+    console.log('API Response:', { status: response.status, data: responseData }); // Debug log
     
-    if (failedItems.length > 0) {
-      const errorMessages = failedItems.map(item => 
-        `${item.name || `Medicine ID ${item.medicineId}`}: ${item.error || 'Unknown error'}`
-      ).join('\n');
-      
-      alert(`Order placed but some items couldn't be updated:\n${errorMessages}\n\nPlease contact support.`);
+    if (!response.ok) {
+      throw new Error(responseData.message || `Order failed with status ${response.status}`);
     }
 
-    // Clear cart and show confirmation
+    // Clear cart only after successful order
     clearCart();
     setActiveStep(3);
     
   } catch (error) {
-    console.error('Error placing order:', error);
-    alert('There was an error processing your order. Please try again.');
+    console.error('Full order placement error:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    alert(`Order failed: ${error.message}\n\nPlease try again or contact support.`);
   } finally {
     setIsPlacingOrder(false);
   }

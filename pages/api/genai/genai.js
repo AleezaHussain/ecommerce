@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     // Initialize OpenAI client with OpenRouter API
     const client = new OpenAI({
       baseURL: "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY, // Securely load API key from env file
+      apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY, // Securely load API key from env file
     });
 
     // Request response from DeepHermes-3 model

@@ -1,4 +1,4 @@
-import { supabase } from '../../../lib/supabaseClientanon';
+import { supabase } from '../../lib/supabaseClientanon';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
@@ -83,44 +83,48 @@ async function handleUpdateCart(req, res, userId) {
     return res.status(400).json({ message: 'Items must be an array' });
   }
 
-  // Validate each cart item
-  const invalidItems = items.filter(item => (
-    !item.medicine_id || 
-    typeof item.quantity !== 'number' || 
-    item.quantity <= 0 ||
-    typeof item.price !== 'number' ||
-    item.price <= 0
-  ));
+  try {
+    // Validate items
+    const invalidItems = items.filter(item => (
+      !item.medicine_id || 
+      typeof item.quantity !== 'number' || 
+      item.quantity <= 0 ||
+      typeof item.price !== 'number' ||
+      item.price <= 0
+    ));
 
-  if (invalidItems.length > 0) {
-    return res.status(400).json({ 
-      message: 'Invalid item format',
-      invalidItems
+    if (invalidItems.length > 0) {
+      return res.status(400).json({ 
+        message: 'Invalid item format',
+        invalidItems
+      });
+    }
+
+    // Upsert cart
+    const { data, error } = await supabase
+      .from('user_carts')
+      .upsert({
+        user_id: userId,
+        items,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({ 
+      success: true,
+      cart: data
+    });
+
+  } catch (error) {
+    console.error('Cart update error:', error);
+    return res.status(500).json({ 
+      message: 'Failed to update cart',
+      error: error.message 
     });
   }
-
-  // Upsert the cart (update if exists, insert if not)
-  const { data, error } = await supabase
-    .from('user_carts')
-    .upsert(
-      { 
-        user_id: userId, 
-        items,
-        updated_at: new Date().toISOString() 
-      },
-      { onConflict: 'user_id' }
-    )
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating cart:', error);
-    throw error;
-  }
-
-  return res.status(200).json({ 
-    success: true,
-    action: data ? 'updated' : 'created',
-    items: data.items
-  });
 }

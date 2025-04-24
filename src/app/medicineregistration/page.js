@@ -263,7 +263,7 @@ export default function MedicineForm({ onSubmit, onClose, initialValues }) {
       <Box
         sx={{
           position: "fixed",
-          top: 0,
+          top: -5,
           left: 0,
           width: "100%",
           height: "100%",

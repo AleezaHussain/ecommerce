@@ -55,16 +55,20 @@ const AdminLoginPage = () => {
     }
 
     try {
-      const response = await fetch("/api/auth/alogin", {
+      const response = await fetch("/api/auth/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+    
       const data = await response.json();
-
+    
       if (!response.ok) throw new Error(data.message || "Login failed");
-
+    
+      // Store only what we have
+      localStorage.setItem("adminEmail", email);
+      localStorage.setItem("adminName", "Admin"); // Hardcoded
+      
       setSuccessMessage("Login successful! Redirecting...");
       setSuccessOpen(true);
       setTimeout(() => router.push("/admin"), 2000);
@@ -106,82 +110,82 @@ const AdminLoginPage = () => {
       >
         {/* Hero Section */}
         <Box
-  sx={{
-    width: "100%",
-    height: { xs: "300px", md: "300px" },
-    position: "relative",
-    mb: 6,
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "white",
-    textAlign: "center",
-  }}
->
-  {/* Background Video */}
-  <Box
-    component="video"
-    autoPlay
-    loop
-    muted
-    playsInline
-    sx={{
-      position: "absolute",
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      zIndex: 0,
-    }}
-  >
-    <source src="/admin-bg.mp4" type="video/mp4" />
-    {/* Fallback image if video doesn't load */}
-    <Box
-      component={Image}
-      src="/admin-hero-fallback.jpg"
-      alt="Admin Portal Background"
-      layout="fill"
-      objectFit="cover"
-    />
-  </Box>
-  
-  {/* Dark overlay */}
-  <Box
-    sx={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0, 0, 0, 0.47)",
-      zIndex: 1,
-    }}
-  />
-  
-  {/* Content */}
-  <Box sx={{ position: "relative", zIndex: 2, px: 3, maxWidth: "800px" }}>
-    <Typography 
-      variant="h2" 
-      sx={{ 
-        fontWeight: 700, 
-        mb: 2,
-        fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
-        textShadow: "0 2px 4px rgba(0,0,0,0.3)"
-      }}
-    >
-      Admin Portal
-    </Typography>
-    <Typography 
-      variant="h5"
-      sx={{
-        fontSize: { xs: "1.25rem", md: "1.5rem" },
-        textShadow: "0 1px 2px rgba(0,0,0,0.3)"
-      }}
-    >
-      Secure access to system administration
-    </Typography>
-  </Box>
-</Box>
+          sx={{
+            width: "100%",
+            height: { xs: "300px", md: "300px" },
+            position: "relative",
+            mb: 6,
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            textAlign: "center",
+          }}
+        >
+          {/* Background Video */}
+          <Box
+            component="video"
+            autoPlay
+            loop
+            muted
+            playsInline
+            sx={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              zIndex: 0,
+            }}
+          >
+            <source src="/admin-bg.mp4" type="video/mp4" />
+            {/* Fallback image if video doesn't load */}
+            <Box
+              component={Image}
+              src="/admin-hero-fallback.jpg"
+              alt="Admin Portal Background"
+              layout="fill"
+              objectFit="cover"
+            />
+          </Box>
+          
+          {/* Dark overlay */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.47)",
+              zIndex: 1,
+            }}
+          />
+          
+          {/* Content */}
+          <Box sx={{ position: "relative", zIndex: 2, px: 3, maxWidth: "800px" }}>
+            <Typography 
+              variant="h2" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: 2,
+                fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
+                textShadow: "0 2px 4px rgba(0,0,0,0.3)"
+              }}
+            >
+              Admin Portal
+            </Typography>
+            <Typography 
+              variant="h5"
+              sx={{
+                fontSize: { xs: "1.25rem", md: "1.5rem" },
+                textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+              }}
+            >
+              Secure access to system administration
+            </Typography>
+          </Box>
+        </Box>
 
         {/* Login Form Section */}
         <Container maxWidth="md">
@@ -269,8 +273,6 @@ const AdminLoginPage = () => {
                 >
                   Login
                 </Button>
-
-                
               </Box>
             </Grid>
 
