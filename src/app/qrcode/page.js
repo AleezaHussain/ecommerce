@@ -33,6 +33,7 @@ export default function QRImageUploadPage() {
   const [statusMsg, setStatusMsg] = useState("");
   const [cameraActive, setCameraActive] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanned, setScanned] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -69,14 +70,12 @@ useEffect(() => {
 }, [encodedImage]);
 
 
-  useEffect(() => {
-    return () => {
-      stopCamera();
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
+useEffect(() => {
+  return () => {
+    stopCamera();
+  };
+}, []);
+
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -113,29 +112,23 @@ useEffect(() => {
     try {
       setCameraActive(true);
       setScanning(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       streamRef.current = stream;
-      videoRef.current.srcObject = stream;
-      
-      await new Promise((resolve) => {
-        videoRef.current.onloadedmetadata = resolve;
-      });
-      
-      videoRef.current.play();
-      scanQRFromCamera();
+  
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+  
+      requestAnimationFrame(scanQRCode);
     } catch (err) {
-      console.error("Camera error:", err);
-      setStatusMsg("❌ Camera access denied or not available");
+      console.error("Camera access error:", err);
+      setStatusMsg("❌ Camera access denied or unavailable.");
       setCameraActive(false);
       setScanning(false);
     }
   };
+  
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -146,61 +139,37 @@ useEffect(() => {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
+    setScanned(false);
     setCameraActive(false);
     setScanning(false);
   };
-
+  
   // ✅ Replace your scanQRFromCamera() with this updated one
-const scanQRFromCamera = () => {
-  if (!cameraActive || !videoRef.current || !canvasRef.current) return;
 
-  const video = videoRef.current;
-  const canvas = canvasRef.current;
-  const ctx = canvas.getContext("2d");
-
-  // Define scanning box (center 60% of frame)
-  const boxWidth = canvas.width * 0.6;
-  const boxHeight = canvas.height * 0.6;
-  const boxX = (canvas.width - boxWidth) / 2;
-  const boxY = (canvas.height - boxHeight) / 2;
-
-  try {
-    if (video.readyState >= video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      // ✅ Apply contrast enhancement
-      ctx.filter = "contrast(200%) brightness(120%)";
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ctx.filter = "none";
-
-      // ✅ Draw overlay box for QR guide
-      ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-
-      // Extract only the region inside the box for QR detection
-      const imageData = ctx.getImageData(boxX, boxY, boxWidth, boxHeight);
-      const code = jsQR(imageData.data, boxWidth, boxHeight);
-
-      if (code?.data) {
-        console.log("✅ QR Detected:", code.data);
-        processQRCodeResult(code.data);
-        stopCamera();
-        return;
-      }
+  const scanQRCode = () => {
+    if (!videoRef.current || !canvasRef.current || scanned) return;
+  
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const video = videoRef.current;
+  
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height);
+  
+    if (code && code.data) {
+      setScanned(true);
+      setScanResult(`🔍 Scanned: ${code.data}`);
+      processQRCodeResult(code.data);
+      stopCamera();
+    } else {
+      animationRef.current = requestAnimationFrame(scanQRCode);
     }
-
-    setTimeout(() => {
-      animationRef.current = requestAnimationFrame(scanQRFromCamera);
-    }, 500);
-  } catch (err) {
-    console.error("❌ Scanning error:", err);
-    setStatusMsg("❌ Error scanning QR code");
-    stopCamera();
-  }
-};
-
+  };
+  
 // ✅ Add this inside your video preview Box (below <video>):
 {/*
 <canvas

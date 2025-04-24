@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import MedicineNFT from "../../../../../artifacts/blockchain/contracts/medicine.sol/MedicineNFT.json";
+import MedicineNFT from "../../../../../blockchain/artifacts/contracts/medicine.sol/MedicineNFT.json"; // ✅ Import ABI
 import { useState, useEffect } from "react";
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MEDICINE_NFT_ADDRESS;
@@ -26,12 +26,8 @@ export const fetchMedicinesByManufacturerAndStatus = async (walletAddress) => {
     // Get all medicine token IDs and their statuses
     const [tokenIds, statuses] = await contract.getAllMedicinesByManufacturer(walletAddress);
 
-<<<<<<< HEAD
     console.log("✅ Medicine Token IDs retrieved:", tokenIds);
     console.log("✅ Corresponding statuses:", statuses);
-=======
-    const tokenIds = await contract.getMedicinesByManufacturer(walletAddress, statusEnumValue);    console.log(`✅ ${status} Medicine IDs:`, tokenIds);
->>>>>>> mavra
 
     let pending = [];
     let accepted = [];

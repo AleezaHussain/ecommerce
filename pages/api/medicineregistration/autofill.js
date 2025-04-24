@@ -75,13 +75,8 @@ export default async function handler(req, res) {
             - medicine_name
             - dosage_form
             - batch_number
-<<<<<<< HEAD
             - excipients (array format)
 
-=======
-            - excipients
-    
->>>>>>> mavra
             Return only the JSON object, **without markdown formatting**. Here is the extracted text:
             ${extractedText}`,
           },
@@ -98,20 +93,14 @@ export default async function handler(req, res) {
       }
     );
 
-<<<<<<< HEAD
     const structuredData =
       qwenResponse.data.choices?.[0]?.message?.content?.trim() || "";
     console.log("🔍 AI Raw Response:", structuredData);
-=======
-    const structuredData = aiResponse.data.choices?.[0]?.message?.content?.trim() || "";
-console.log("🔍 AI Raw Response:", structuredData);
->>>>>>> mavra
 
     if (!structuredData) {
       throw new Error("AI response is empty. Check the extracted text or AI model response.");
     }
 
-<<<<<<< HEAD
     const cleanedJson = structuredData.replace(/```json|```/g, "").trim();
 
     let jsonData;
@@ -129,20 +118,6 @@ console.log("🔍 AI Raw Response:", structuredData);
       message: "Certificate processed successfully",
       extractedData: jsonData,
     });
-=======
-const cleanedJson = structuredData.replace(/```json|```/g, "").trim();
-
-let jsonData;
-try {
-  jsonData = JSON.parse(cleanedJson);
-} catch (jsonError) {
-  console.error("❌ JSON Parsing Error:", jsonError);
-  return res.status(500).json({ message: "Error parsing AI response. Please check the format." });
-}
-
-console.log("✅ Extracted Data:", jsonData);
-return res.status(200).json({ message: "Certificate processed successfully", extractedData: jsonData });
->>>>>>> mavra
   } catch (error) {
     console.error("❌ Unexpected error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
