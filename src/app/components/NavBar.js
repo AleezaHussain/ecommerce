@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Box, Typography, Button, IconButton, Menu, MenuItem, Fade, Avatar, Divider } from "@mui/material";
 import Image from "next/image";
+import CircularProgress from "@mui/material/CircularProgress";
 import { usePathname, useRouter } from "next/navigation";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import FactoryIcon from "@mui/icons-material/Factory";
@@ -14,6 +15,7 @@ import Link from "next/link";
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import Loading from "./loading";
 
 const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, onLogout }) => {
   const pathname = usePathname();
@@ -27,8 +29,12 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
   const isProfilePage = pathname === "/manufacturerdashboard/manufacturerprofile";
   const [loginAnchorEl, setLoginAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const [isHoveringLogin, setIsHoveringLogin] = useState(false);
   const openLoginMenu = Boolean(loginAnchorEl);
   const openProfileMenu = Boolean(profileAnchorEl);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLoginClick = (event) => {
     setLoginAnchorEl(event.currentTarget);
@@ -47,16 +53,52 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
   };
 
   const navigateTo = (path) => {
-    router.push(path);
+    setIsNavigating(true);
     handleLoginClose();
-    window.scrollTo(0, 0);
+    setTimeout(() => {
+      router.push(path);
+      window.scrollTo(0, 0);
+    }, 1000);
   };
 
   const handleLogout = () => {
+    setIsLoggingOut(true);
     localStorage.removeItem("adminEmail");
     localStorage.removeItem("adminName");
-    router.push("/adminlogin"); // Changed from window.location.href to router.push
+    setTimeout(() => {
+      router.push("/adminlogin");
+    }, 1500);
   };
+  
+  if (isLoggingOut) {
+    return <Loading/>;
+  }
+  
+  if (isNavigating) {
+    return <Loading />;
+  }
+
+  // Login options data
+  const loginOptions = [
+    {
+      path: "/manufacturerlogin",
+      icon: <FactoryIcon sx={{ fontSize: 28, color: "#1d4e89" }} />,
+      title: "Manufacturer",
+      subtitle: "Production dashboard"
+    },
+    {
+      path: "/userlogin",
+      icon: <AccountCircleIcon sx={{ fontSize: 28, color: "#1d4e89" }} />,
+      title: "User",
+      subtitle: "Customer portal"
+    },
+    {
+      path: "/adminlogin",
+      icon: <AdminPanelSettingsIcon sx={{ fontSize: 28, color: "#1d4e89" }} />,
+      title: "Admin",
+      subtitle: "System controls"
+    }
+  ];
 
   return (
     <>
@@ -64,7 +106,7 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
       <Box
         sx={{
           width: "100%",
-          bgcolor: "#D32F2F",
+          bgcolor: "#1d4e89",
           color: "white",
           padding: "8px 0",
           position: "fixed",
@@ -108,7 +150,7 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
       <Box
         sx={{
           width: "100%",
-          bgcolor: "#002F6C",
+          bgcolor: "#0F1A3A ",
           padding: "10px 20px",
           display: "flex",
           justifyContent: "space-between",
@@ -127,15 +169,16 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
               display: "flex", 
               alignItems: "center",
               cursor: "pointer",
-              marginTop: "70px"
+              marginTop: "78px",
+              marginLeft:-7,
             }}
-            onClick={() => navigateTo("/landingpage")}
+            onClick={() => navigateTo("/")}
           >
             <Image 
-              src="/logob.png" 
+              src="/logoc.png" 
               alt="Company Logo" 
-              width={180} 
-              height={100} 
+              width={360} 
+              height={150} 
               priority 
               style={{ objectFit: "contain" }}
             />
@@ -209,34 +252,31 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
                   },
                 }}
               >
-<Box sx={{ p: 2 }}>
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-    <Avatar sx={{ width: 56, height: 56, bgcolor: "#1976d2", fontSize: '1.5rem' }}>
-      A {/* Just show 'A' for Admin */}
-    </Avatar>
-    <Box>
-      <Typography variant="subtitle1" fontWeight={600}>
-        Admin
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {adminDetails?.email || "No email"}
-      </Typography>
-    </Box>
-  </Box>
-</Box>
+                <Box sx={{ p: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ width: 56, height: 56, bgcolor: "#1976d2", fontSize: '1.5rem' }}>
+                      A
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        Admin
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {adminDetails?.email || "No email"}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
 
                 <Divider />
 
-              
-
                 <MenuItem 
-  onClick={handleLogout}
-  sx={{ py: 1.5 }}
->
-  <LogoutIcon sx={{ mr: 2, color: 'action.active' }} />
-  <Typography variant="body1">Logout</Typography>
-</MenuItem>
-
+                  onClick={handleLogout}
+                  sx={{ py: 1.5 }}
+                >
+                  <LogoutIcon sx={{ mr: 2, color: 'action.active' }} />
+                  <Typography variant="body1">Logout</Typography>
+                </MenuItem>
               </Menu>
             </>
           )}
@@ -351,10 +391,14 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
 
                 <MenuItem 
                   onClick={() => {
-                    onLogout();
+                    setIsLoggingOut(true);
                     handleProfileClose();
+                    localStorage.removeItem("manufacturer");
+                    localStorage.removeItem("token");
+                    setTimeout(() => {
+                      router.push("/manufacturerlogin");
+                    }, 1500);
                   }}
-                  sx={{ py: 1.5 }}
                 >
                   <LogoutIcon sx={{ mr: 2, color: 'action.active' }} />
                   <Typography variant="body1">Logout</Typography>
@@ -367,8 +411,7 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
           {(isManufacturerReg && !walletStatus?.approved) && (
             <Button
               variant="contained"
-              component={Link}
-              href={isManufacturerReg ? "/manufacturerlogin" : ""}
+              onClick={() => navigateTo("/manufacturerlogin")}
               sx={{ 
                 backgroundColor: "#0066cc", 
                 color: "#fff", 
@@ -388,44 +431,131 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
                 height: "40px"
               }}
             >
-              {isManufacturerReg ? "Login" : ""}
+              Login
             </Button>
           )}
 
           {/* Login Options Button (shown on landing page and all login pages) */}
-{(isLandingPage || isLoginPage || isManufacturerReg) && !walletStatus?.approved && !adminDetails && (
-  <Button
-    variant="contained"
-    startIcon={<AccountCircleIcon />}
-    sx={{ 
-      backgroundColor: "#004b8d", 
-      color: "#fff", 
-      "&:hover": { 
-        backgroundColor: "#003366",
-        transform: "translateY(-2px)",
-        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)"
-      },
-      fontWeight: 600,
-      px: 3,
-      py: 1,
-      borderRadius: "6px",
-      textTransform: "none",
-      fontSize: "0.9rem",
-      transition: "all 0.2s ease",
-      minWidth: "140px",
-      height: "40px"
-    }}
-    onClick={handleLoginClick}
-    aria-label="Login options"
-    aria-controls="login-menu"
-    aria-haspopup="true"
-  >
-    Login User
-  </Button>
-)}
+          {(isLandingPage || isLoginPage || isManufacturerReg) && !walletStatus?.approved && !adminDetails && (
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'inline-block'
+              }}
+              onMouseEnter={() => setIsHoveringLogin(true)}
+              onMouseLeave={() => setIsHoveringLogin(false)}
+            >
+              <Button
+                variant="contained"
+                startIcon={<AccountCircleIcon />}
+                sx={{ 
+                  backgroundColor: "#004b8d", 
+                  color: "#fff", 
+                  "&:hover": { 
+                    backgroundColor: "#003366",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)"
+                  },
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1,
+                  borderRadius: "6px",
+                  textTransform: "none",
+                  fontSize: "0.9rem",
+                  transition: "all 0.2s ease",
+                  minWidth: "140px",
+                  height: "40px"
+                }}
+                aria-label="Login options"
+                aria-controls="login-menu"
+                aria-haspopup="true"
+              >
+                Login User
+              </Button>
+
+              {/* Hover-based login options panel */}
+              {isHoveringLogin && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    mt: 1,
+                    width: '300px',
+                    backgroundColor: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+                    zIndex: 1,
+                    overflow: 'hidden',
+                    animation: 'fadeIn 0.3s ease-out',
+                    '@keyframes fadeIn': {
+                      from: { opacity: 0, transform: 'translateY(-10px)' },
+                      to: { opacity: 1, transform: 'translateY(0)' }
+                    }
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      p: 2,
+                      backgroundColor: '#f8f9fa',
+                      borderBottom: '1px solid #e9ecef'
+                    }}
+                  >
+                    <Typography variant="subtitle2" fontWeight={600} color="#212529">
+                      Select Login Type
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', p: 2 }}>
+                    {loginOptions.map((option, index) => (
+                      <Box 
+                        key={index}
+                        onClick={() => navigateTo(option.path)}
+                        sx={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          p: 1.5,
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: '#f1f3f5',
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        <Box sx={{ 
+                          width: 48, 
+                          height: 48, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          backgroundColor: '#e9f5ff',
+                          borderRadius: '50%',
+                          mb: 1
+                        }}>
+                          {option.icon}
+                        </Box>
+                        <Typography variant="subtitle2" fontWeight={600} color="#212529">
+                          {option.title}
+                        </Typography>
+                        <Typography variant="caption" color="#6c757d" textAlign="center">
+                          {option.subtitle}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
 
-        {/* Login Menu (shown on landing page and all login pages) */}
+        {/* Fallback Menu for mobile */}
         <Menu
           id="login-menu"
           anchorEl={loginAnchorEl}
@@ -457,59 +587,26 @@ const NavBar = ({ loginButton, walletStatus, manufacturerDetails, adminDetails, 
             }
           }}
         >
-          <MenuItem 
-            onClick={() => navigateTo("/manufacturerlogin")}
-            sx={{
-              py: 2,
-              px: 3,
-              "&:hover": { bgcolor: "rgba(0, 102, 204, 0.08)" },
-              transition: "background-color 0.2s ease"
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <FactoryIcon color="primary" sx={{ fontSize: 28 }} />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={500}>Manufacturer</Typography>
-                <Typography variant="body2" color="text.secondary">Production dashboard</Typography>
+          {loginOptions.map((option, index) => (
+            <MenuItem 
+              key={index}
+              onClick={() => navigateTo(option.path)}
+              sx={{
+                py: 2,
+                px: 3,
+                "&:hover": { bgcolor: "rgba(0, 102, 204, 0.08)" },
+                transition: "background-color 0.2s ease"
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {option.icon}
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={500}>{option.title}</Typography>
+                  <Typography variant="body2" color="text.secondary">{option.subtitle}</Typography>
+                </Box>
               </Box>
-            </Box>
-          </MenuItem>
-
-          <MenuItem 
-            onClick={() => navigateTo("/userlogin")}
-            sx={{
-              py: 2,
-              px: 3,
-              "&:hover": { bgcolor: "rgba(0, 102, 204, 0.08)" },
-              transition: "background-color 0.2s ease"
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <AccountCircleIcon color="primary" sx={{ fontSize: 28 }} />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={500}>User</Typography>
-                <Typography variant="body2" color="text.secondary">Customer portal</Typography>
-              </Box>
-            </Box>
-          </MenuItem>
-
-          <MenuItem 
-            onClick={() => navigateTo("/adminlogin")}
-            sx={{
-              py: 2,
-              px: 3,
-              "&:hover": { bgcolor: "rgba(0, 102, 204, 0.08)" },
-              transition: "background-color 0.2s ease"
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <AdminPanelSettingsIcon color="primary" sx={{ fontSize: 28 }} />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={500}>Admin</Typography>
-                <Typography variant="body2" color="text.secondary">System controls</Typography>
-              </Box>
-            </Box>
-          </MenuItem>
+            </MenuItem>
+          ))}
         </Menu>
       </Box>
     </>

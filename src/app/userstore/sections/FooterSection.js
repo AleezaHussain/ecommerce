@@ -12,7 +12,7 @@ export const FooterSection = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "#002F6C",
+        backgroundColor: "#0F1A3A",
         color: "white",
         padding: { xs: "2rem 1rem", md: "2rem 2rem" },
         marginTop: "4rem",
@@ -21,16 +21,17 @@ export const FooterSection = () => {
       <Grid container spacing={4} justifyContent="center">
         {/* Logo and Description */}
         <Grid item xs={12} md={3}>
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: { xs: "center", md: "flex-start" } }}>
-            <Box>
-              <Image 
-                src="/logob.png" 
-                alt="MediCare Logo" 
-                width={250} 
-                height={60} 
-                style={{ objectFit: "contain" }}
-              />
-            </Box>
+        <Box sx={{ width: { xs: "250px", md: "500px" }, mb: 0,ml:-12 }}>
+  <Image 
+    src="/logoc.png" 
+    alt="PharmaGuard 24/7 Logo" 
+    width={1000} 
+    height={1000} 
+    style={{ width: "100%", height: "auto", objectFit: "contain" }}
+  />
+</Box>
+
+
             <Typography variant="body2" sx={{ mb: 2, textAlign: { xs: "center", md: "left" } }}>
               Your trusted partner in health and pharmacy, providing quality care since 2025.
             </Typography>
@@ -48,7 +49,6 @@ export const FooterSection = () => {
                 <LinkedInIcon />
               </IconButton>
             </Box>
-          </Box>
         </Grid>
 
         {/* Quick Links */}

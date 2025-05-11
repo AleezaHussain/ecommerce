@@ -18,11 +18,13 @@ import {
   LinearProgress,
   TextField,
   Chip,
-  Divider
+  Divider,
+  CircularProgress
 } from "@mui/material";
 import { getManufacturersByStatus } from "../../testingblockchain/accepted-rejected-manufacturer/fetch";
 import axios from "axios";
 import { rejectManufacturer } from "../../../../lib/adminmanufacturerfetch";
+import { getPendingManufacturers } from "../../testingblockchain/pendingmanufacture/fetch";
 
 const ManufacturerSlideshow = ({
   manufacturers,
@@ -34,12 +36,19 @@ const ManufacturerSlideshow = ({
   setSelectedManufacturer,
   authenticityScore,
   setAuthenticityScore,
+  onStatusUpdate,
+  showInfoAlert,
+  showSuccessAlert,
+  showErrorAlert
 }) => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filteredManufacturers, setFilteredManufacturers] = useState([]);
   const [rejectionComment, setRejectionComment] = useState("");
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const [manufacturerToReject, setManufacturerToReject] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
 
   const columnNameMapping = {
     manufacturerName: "Manufacturer Name",
@@ -57,6 +66,7 @@ const ManufacturerSlideshow = ({
 
   useEffect(() => {
     const fetchManufacturers = async () => {
+      setIsLoading(true);
       try {
         const status = activeSection === "pendingManufacturers" ? "Pending" :
                      activeSection === "acceptedManufacturers" ? "Approved" :
@@ -71,6 +81,8 @@ const ManufacturerSlideshow = ({
         }
       } catch (error) {
         console.error("Error fetching manufacturers:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -85,8 +97,12 @@ const ManufacturerSlideshow = ({
       if (selected.website) {
         await checkWebsiteAuthenticity(selected.website);
       } else {
-        setAuthenticityScore(0);
-      }
+        setAuthenticityScore(null); // show "Calculating..."
+        setTimeout(() => {
+          setAuthenticityScore(0); // fallback after a short delay
+        }, 500); // or 1000ms
+              }
+      
     }
   };
 
@@ -98,25 +114,26 @@ const ManufacturerSlideshow = ({
 
   const handleStatusUpdate = async (tokenId, newStatus) => {
     try {
+      setIsProcessing(true);
+      showInfoAlert("Please confirm the transaction in MetaMask...");
+      
+      let success = false;
       if (newStatus === "Approved") {
-        await handleAccept(tokenId);
+        success = await handleAccept(tokenId);
       } else if (newStatus === "Rejected") {
-        await handleReject(tokenId);
+        success = await handleReject(tokenId);
       }
-      setDetailsModalOpen(false);
-      const status = activeSection === "pendingManufacturers" ? "Pending" :
-                     activeSection === "acceptedManufacturers" ? "Approved" :
-                     activeSection === "rejectedManufacturers" ? "Rejected" : null;
-      if (status) {
-        const data = await getManufacturersByStatus(status);
-        const updatedData = data.map((manufacturer) => ({
-          ...manufacturer,
-          status: status,
-        }));
-        setFilteredManufacturers(updatedData);
+
+      if (success) {
+        setDetailsModalOpen(false);
+        await onStatusUpdate();
+        showSuccessAlert(`Manufacturer ${newStatus.toLowerCase()} successfully!`);
       }
     } catch (error) {
       console.error("Error updating manufacturer status:", error);
+      showErrorAlert("Failed to update manufacturer status");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -140,19 +157,27 @@ const ManufacturerSlideshow = ({
 
   const confirmRejection = async () => {
     try {
+      setIsProcessing(true);
+      showInfoAlert("Please confirm the rejection in MetaMask...");
+      
       const manufacturer = filteredManufacturers.find(m => m.tokenId === manufacturerToReject);
       if (!manufacturer) throw new Error("Manufacturer not found");
 
       await rejectManufacturer(manufacturer.walletAddress, rejectionComment);
-      await handleReject(manufacturerToReject);
-      const data = await getManufacturersByStatus("Rejected");
-      setFilteredManufacturers(data.map(m => ({ ...m, status: "Rejected" })));
-
-      setShowRejectionDialog(false);
-      setRejectionComment("");
-      setManufacturerToReject(null);
+      const success = await handleReject(manufacturerToReject);
+      
+      if (success) {
+        setShowRejectionDialog(false);
+        setRejectionComment("");
+        setManufacturerToReject(null);
+        await onStatusUpdate();
+        showSuccessAlert("Manufacturer rejected successfully!");
+      }
     } catch (error) {
       console.error("Complete rejection error:", error);
+      showErrorAlert("Failed to reject manufacturer");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -178,7 +203,7 @@ const ManufacturerSlideshow = ({
   return (
     <Box sx={{ width: "100%", overflowY: "auto" }}>
       <TableContainer component={Paper} elevation={3} sx={{ borderRadius: 2 }}>
-        <Table >
+        <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell align="center" sx={{ fontWeight: "bold" }}>Manufacturer Name</TableCell>
@@ -188,8 +213,15 @@ const ManufacturerSlideshow = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredManufacturers.map((manufacturer) => (
-              <TableRow key={manufacturer.tokenId} hover>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
+            ) : filteredManufacturers.length > 0 ? (
+              filteredManufacturers.map((manufacturer) => (
+                <TableRow key={manufacturer.tokenId} hover>
                 <TableCell align="center">{manufacturer.manufacturerName}</TableCell>
                 <TableCell align="center">{manufacturer.licenceNo}</TableCell>
                 <TableCell align="center">{getStatusChip(manufacturer.status)}</TableCell>
@@ -209,26 +241,34 @@ const ManufacturerSlideshow = ({
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
+            ))) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    {activeSection === "pendingManufacturers" 
+                      ? "No pending manufacturers available" 
+                      : activeSection === "acceptedManufacturers" 
+                        ? "No approved manufacturers available" 
+                        : "No rejected manufacturers available"}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
       <Dialog
         open={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
+        onClose={() => !isProcessing && setDetailsModalOpen(false)}
         fullWidth
         maxWidth="md"
         sx={{
           zIndex: 1700,
-          borderRadius:50,
-          // Higher than NavBar's z-index (1600)
           '& .MuiBackdrop-root': {
             backgroundColor: 'rgba(0,0,0,0.7)',
-             // Optional: darker backdrop
           }
         }}
-        
       >
         <DialogTitle sx={{ backgroundColor: "#002F6C", color: "white" }}>
           Manufacturer Details
@@ -290,28 +330,26 @@ const ManufacturerSlideshow = ({
                 })}
               </Box>
 
-              {selectedManufacturer.website && (
-                <Box sx={{ mt: 3 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#002F6C" }}>
-                    Website Authenticity Score
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Typography variant="body1" sx={{ color: "#555" }}>
-                      {authenticityScore !== null ? `${authenticityScore}%` : "Calculating..."}
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={authenticityScore || 0}
-                      color={getProgressBarColor(authenticityScore)}
-                      sx={{
-                        flexGrow: 1,
-                        height: 10,
-                        borderRadius: 5,
-                      }}
-                    />
-                  </Box>
-                </Box>
-              )}
+              <Box sx={{ mt: 3 }}>
+  <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#002F6C" }}>
+    Website Authenticity Score
+  </Typography>
+  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Typography variant="body1" sx={{ color: "#555" }}>
+      {authenticityScore === null ? "Calculating..." : `${authenticityScore}%`}
+    </Typography>
+    <LinearProgress
+      variant="determinate"
+      value={authenticityScore ?? 0}
+      color={getProgressBarColor(authenticityScore ?? 0)}
+      sx={{
+        flexGrow: 1,
+        height: 10,
+        borderRadius: 5,
+      }}
+    />
+  </Box>
+</Box>
 
               {activeSection === "pendingManufacturers" && selectedManufacturer.status === "Pending" && (
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
@@ -324,8 +362,10 @@ const ManufacturerSlideshow = ({
                         backgroundColor: "#1B5E20"
                       }
                     }}
+                    disabled={isProcessing}
+                    endIcon={isProcessing ? <CircularProgress size={20} color="inherit" /> : null}
                   >
-                    Approve
+                    {isProcessing ? "Processing..." : "Approve"}
                   </Button>
                   <Button
                     variant="contained"
@@ -336,6 +376,7 @@ const ManufacturerSlideshow = ({
                         backgroundColor: "#b71c1c"
                       }
                     }}
+                    disabled={isProcessing}
                   >
                     Reject
                   </Button>
@@ -345,16 +386,18 @@ const ManufacturerSlideshow = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDetailsModalOpen(false)}>Close</Button>
+          <Button 
+            onClick={() => !isProcessing && setDetailsModalOpen(false)}
+            disabled={isProcessing}
+          >
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog
         open={showRejectionDialog}
-        onClose={() => {
-          setShowRejectionDialog(false);
-          setRejectionComment("");
-        }}
+        onClose={() => !isProcessing && setShowRejectionDialog(false)}
       >
         <DialogTitle>Rejection Reason</DialogTitle>
         <DialogContent>
@@ -369,22 +412,25 @@ const ManufacturerSlideshow = ({
             value={rejectionComment}
             onChange={(e) => setRejectionComment(e.target.value)}
             sx={{ mt: 2 }}
+            disabled={isProcessing}
           />
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setShowRejectionDialog(false)}
+            onClick={() => !isProcessing && setShowRejectionDialog(false)}
             sx={{ color: "#016A70" }}
+            disabled={isProcessing}
           >
             Cancel
           </Button>
           <Button 
             onClick={confirmRejection}
             color="error"
-            disabled={!rejectionComment.trim()}
+            disabled={!rejectionComment.trim() || isProcessing}
             variant="contained"
+            endIcon={isProcessing ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            Confirm Rejection
+            {isProcessing ? "Processing..." : "Confirm Rejection"}
           </Button>
         </DialogActions>
       </Dialog>

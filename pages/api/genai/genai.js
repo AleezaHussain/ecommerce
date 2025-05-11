@@ -20,10 +20,13 @@ export default async function handler(req, res) {
 
     // If expiry date has passed, automatically return "No" (Suspicious)
     if (expiryDate < today) {
-      return res.status(200).json({ isAuthentic: "No" });
+      return res.status(200).json({ 
+        isAuthentic: "No",
+        message: "This medicine is expired and therefore suspicious."
+      });
     }
 
-    // Construct the AI prompt (Fixed syntax)
+    // Construct the AI prompt
     const prompt = `
     Analyze the following medicine details and determine if it is **authentic** or **suspicious**.
 
@@ -43,33 +46,33 @@ export default async function handler(req, res) {
     **Output format:** Only return **"Yes"** or **"No"**, without any extra words.
     `;
 
-    // Initialize OpenAI client with OpenRouter API
     const client = new OpenAI({
       baseURL: "https://openrouter.ai/api/v1",
-      apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY, // Securely load API key from env file
+      apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
     });
 
-    // Request response from DeepHermes-3 model
     const completion = await client.chat.completions.create({
       model: "nousresearch/deephermes-3-llama-3-8b-preview:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 2, // Ensure a single-word response
-      temperature: 0, // Reduce randomness for strict Yes/No responses
-      extra_headers: {
-        "HTTP-Referer": "<YOUR_SITE_URL>", // Optional for OpenRouter rankings
-        "X-Title": "<YOUR_SITE_NAME>", // Optional for OpenRouter rankings
-      },
-      extra_body: {},
+      max_tokens: 2,
+      temperature: 0,
     });
 
     let aiResponse = completion.choices?.[0]?.message?.content.trim() || "No response";
+    const isAuthentic = aiResponse.toLowerCase().startsWith("yes") ? "Yes" : "No";
 
-    // Ensure response is either "Yes" or "No"
-    const finalResponse = aiResponse.toLowerCase().startsWith("yes") ? "Yes" : "No";
-
-    return res.status(200).json({ isAuthentic: finalResponse });
+    return res.status(200).json({ 
+      isAuthentic,
+      message: isAuthentic === "Yes" 
+        ? "This medicine appears to be authentic based on the provided details." 
+        : "This medicine has been flagged as suspicious. Please review carefully."
+    });
   } catch (error) {
     console.error("Error fetching response:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      isAuthentic: "No",
+      message: "Could not verify authenticity due to an error."
+    });
   }
 }

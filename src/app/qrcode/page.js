@@ -249,7 +249,7 @@ useEffect(() => {
   return (
     <>
       <Allnavbar />
-      <Container maxWidth="md" sx={{ pt: 15, pb: 6 }}>
+      <Container maxWidth="md" sx={{ pt: 20, pb: 6 }}>
         <Paper elevation={3} sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             Medicine QR Code Scanner

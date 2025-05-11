@@ -12,12 +12,14 @@ import {
   InputAdornment,
   Grid,
   Paper,
-  Divider
+  Divider,
+  CircularProgress
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { SuccessMsgBox, ErrorMsgBox } from "../components/MsgBox";
 import NavBar from "../components/NavBar";
 import { FooterSection } from "../userstore/sections/FooterSection";
+import Loading from "../components/loading";
 
 const Login = () => {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -32,6 +34,9 @@ const Login = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [openSuccessMsg, setOpenSuccessMsg] = useState(false);
   const [openErrorMsg, setOpenErrorMsg] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,15 +56,19 @@ const Login = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // 👈 Start loader
+  
     if (!validateEmail(formData.email)) {
       setErrors({ ...errors, email: "Please enter a valid email address" });
+      setIsLoading(false);
       return;
     }
     if (formData.password.length < 6) {
       setErrors({ ...errors, password: "Password must be at least 6 characters" });
+      setIsLoading(false);
       return;
     }
-
+  
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -71,7 +80,7 @@ const Login = () => {
           role: "user",
         }),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         setSuccessMsg("Account created successfully! Please login.");
@@ -84,12 +93,15 @@ const Login = () => {
     } catch (error) {
       setErrorMsg("Signup failed. Please try again.");
       setOpenErrorMsg(true);
+    } finally {
+      setIsLoading(false); // 👈 Always stop loader
     }
   };
-
+  
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+    setIsLoading(true); // 👈 Start loader
+  
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -100,28 +112,27 @@ const Login = () => {
         }),
       });
   
-      console.log("Response status:", response.status); // Add this line
-      
       const data = await response.json();
-      console.log("Response data:", data); // Add this line
       
       if (response.ok) {
-        // Save user data and token
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        window.location.href = "/userstore/userstorepages/dashboard";
+        const redirectUrl = localStorage.getItem('redirectAfterLogin') || '/userstore/userstorepages/dashboard';
+        localStorage.removeItem('redirectAfterLogin');
+        window.location.href = redirectUrl;
       } else {
         setErrorMsg(data.message || "Login failed");
         setOpenErrorMsg(true);
+        setIsLoading(false); // 👈 Stop loader on error
       }
     } catch (error) {
-      console.error("Login error:", error); // Add detailed logging
       setErrorMsg("Login failed. Please check your connection and try again.");
       setOpenErrorMsg(true);
+      setIsLoading(false); // 👈 Stop loader on error
     }
   };
-  // Add this to your Login component or a separate Auth service
-// Add this to your Login component
+  
+  
 const handleLogout = async () => {
   try {
     // Clear local storage
@@ -143,6 +154,10 @@ const handleLogout = async () => {
     window.location.href = '/userlogin';
   }
 };
+if (isRedirecting) {
+  return <Loading />;
+}
+
 
   return (
     <>
@@ -167,7 +182,7 @@ const handleLogout = async () => {
       <Box
         sx={{
           width: "100%",
-          height: { xs: "300px", md: "450px" },
+          height: { xs: "300px", md: "500px" },
           position: "relative",
           display: "flex",
           alignItems: "center",
@@ -175,7 +190,7 @@ const handleLogout = async () => {
           color: "white",
           textAlign: "center",
           mb: 6,
-          pt:10,
+          pt:13,
           overflow: "hidden",
         }}
       >
@@ -237,21 +252,26 @@ const handleLogout = async () => {
           </Typography>
           {/* Add the View Store link here */}
           <Button
-component={Link}
-href="/userstore"
-            variant="outlined"
-            sx={{
-              mt: 3,
-              color: "white",
-              borderColor: "white",
-              "&:hover": {
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                borderColor: "white"
-              }
-            }}
-          >
-            View Store Without Login
-          </Button>
+  variant="outlined"
+  onClick={() => {
+    setIsRedirecting(true);
+    setTimeout(() => {
+      window.location.href = "/userstore";
+    }, 1000); // Delay for loader effect
+  }}
+  sx={{
+    mt: 3,
+    color: "white",
+    borderColor: "white",
+    "&:hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+      borderColor: "white"
+    }
+  }}
+>
+  View Store Without Login
+</Button>
+
         </Box>
       </Box>
 
@@ -303,20 +323,23 @@ href="/userstore"
                     sx={{ mb: 3 }}
                   />
                   <Button
-                    fullWidth
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    sx={{
-                      backgroundColor: "#002F6C",
-                      "&:hover": { backgroundColor: "#001A3A" },
-                      py: 1.5,
-                      fontSize: "1rem",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Sign In
-                  </Button>
+  fullWidth
+  type="submit"
+  variant="contained"
+  size="large"
+  disabled={isLoading}
+  sx={{
+    backgroundColor: "#002F6C",
+    "&:hover": { backgroundColor: "#001A3A" },
+    py: 1.5,
+    fontSize: "1rem",
+    fontWeight: 500,
+  }}
+>
+  {isLoading ? <CircularProgress size={23} sx={{ color: "white" }} /> : "Sign In"}
+</Button>
+
+
                 </form>
               ) : (
                 <form onSubmit={handleSignup}>
@@ -365,20 +388,22 @@ href="/userstore"
                     sx={{ mb: 3 }}
                   />
                   <Button
-                    fullWidth
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    sx={{
-                      backgroundColor: "#002F6C",
-                      "&:hover": { backgroundColor: "#001A3A" },
-                      py: 1.5,
-                      fontSize: "1rem",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Create Account
-                  </Button>
+  fullWidth
+  type="submit"
+  variant="contained"
+  size="large"
+  disabled={isLoading}
+  sx={{
+    backgroundColor: "#002F6C",
+    "&:hover": { backgroundColor: "#001A3A" },
+    py: 1.5,
+    fontSize: "1rem",
+    fontWeight: 500,
+  }}
+>
+  {isLoading ? <CircularProgress size={23} sx={{ color: "white" }} /> : "Create Account"}
+</Button>
+
                 </form>
               )}
             </Paper>

@@ -36,10 +36,10 @@ const ChartsSection = ({
       {/* Summary Cards */}
       <Box sx={{ gridColumn: "span 4" }}>
         <StatCard>
-          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#016A70" }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#032e63" }}>
             Total Manufacturers
           </Typography>
-          <Typography variant="h3" sx={{ textAlign: "center", color: "#016A70" }}>
+          <Typography variant="h3" sx={{ textAlign: "center", color: "#032e63" }}>
             {totalManufacturers}
           </Typography>
         </StatCard>
@@ -68,7 +68,7 @@ const ChartsSection = ({
       {/* Charts */}
       <Box sx={{ gridColumn: "span 8" }}>
         <StatCard>
-          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#016A70" }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#032e63" }}>
             Manufacturers by Status
           </Typography>
           <BarChart
@@ -80,7 +80,7 @@ const ChartsSection = ({
       </Box>
       <Box sx={{ gridColumn: "span 4" }}>
         <StatCard>
-          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#016A70" }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#032e63" }}>
             Status Distribution
           </Typography>
           <Box sx={{ height: "250px" }}>

@@ -27,7 +27,17 @@ const ManufacturerLogin = () => {
         message: "",
         routeButton: null
     });
+    const [registerLoading, setRegisterLoading] = useState(false);
 
+
+    const handleRegisterRedirect = () => {
+        setRegisterLoading(true);
+        setTimeout(() => {
+          window.location.href = "/manufacturer";
+        }, 1200); // Optional delay to show the spinner
+      };
+
+      
     const handleInputChange = (event) => {
         const walletRegex = /^0x[a-fA-F0-9]{40}$/;
         const value = event.target.value;
@@ -168,9 +178,9 @@ const ManufacturerLogin = () => {
 <Box
   sx={{
     width: "100%",
-    height: "300px",
+    height: "370px",
     position: "relative",
-    mb: 4,
+    mb: 2,
     overflow: "hidden",
   }}
 >
@@ -316,24 +326,25 @@ const ManufacturerLogin = () => {
                                     Register your pharmaceutical company to join our network and start managing your products.
                                 </Typography>
                                 <Button
-                                    variant="outlined"
-                                    component={Link}
-                                    href="/manufacturer"
-                                    sx={{
-                                        alignSelf: "flex-start",
-                                        px: 4,
-                                        py: 1.5,
-                                        color: "#002F6C",
-                                        borderColor: "#002F6C",
-                                        "&:hover": {
-                                            backgroundColor: "#002F6C",
-                                            color: "white",
-                                            borderColor: "#002F6C"
-                                        }
-                                    }}
-                                >
-                                    Register Now
-                                </Button>
+  variant="outlined"
+  onClick={handleRegisterRedirect}
+  disabled={registerLoading}
+  sx={{
+    alignSelf: "flex-start",
+    px: 4,
+    py: 1.5,
+    color: "#002F6C",
+    borderColor: "#002F6C",
+    "&:hover": {
+      backgroundColor: "#002F6C",
+      color: "white",
+      borderColor: "#002F6C"
+    }
+  }}
+>
+  {registerLoading ? <CircularProgress size={24} color="inherit" /> : "Register Now"}
+</Button>
+
 
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" sx={{ mb: 2, color: "#002F6C", fontWeight: 600 }}>

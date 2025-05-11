@@ -26,7 +26,6 @@ const MedicinePage = ({ activeSection, handleSectionChange }) => {
   const [errorAlert, setErrorAlert] = useState({ open: false, message: "" });
   const [infoAlert, setInfoAlert] = useState({ open: false, message: "" });
 
-  
   const handleChange = (event, newValue) => {
     setValue(newValue);
     const sections = ["pendingMedicines", "acceptedMedicines", "rejectedMedicines", "medicineAnalytics"];
@@ -64,7 +63,7 @@ const MedicinePage = ({ activeSection, handleSectionChange }) => {
   const showInfoAlert = (message) => {
     setInfoAlert({ open: true, message });
   };
-  
+
   const handleView = async (id) => {
     const selected = pendingMedicines.find((m) => m.tokenId === id);
     if (selected) {
@@ -83,9 +82,11 @@ const MedicinePage = ({ activeSection, handleSectionChange }) => {
       await updateMedicineStatus(tokenId, "Accepted");
       await loadAllMedicines();
       showSuccessAlert("Medicine approved successfully!");
+      return true;
     } catch (error) {
       console.error("Error accepting medicine:", error);
       showErrorAlert(error.message || "Failed to approve medicine.");
+      return false;
     }
   };
 
@@ -95,9 +96,11 @@ const MedicinePage = ({ activeSection, handleSectionChange }) => {
       await updateMedicineStatus(tokenId, "Rejected");
       await loadAllMedicines();
       showSuccessAlert("Medicine rejected successfully!");
+      return true;
     } catch (error) {
       console.error("Error rejecting medicine:", error);
       showErrorAlert(error.message || "Failed to reject medicine.");
+      return false;
     }
   };
 
@@ -117,7 +120,7 @@ const MedicinePage = ({ activeSection, handleSectionChange }) => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", width: "100%" }}>
       <Box sx={{ flex: 1, padding: "30px", display: "flex", flexDirection: "column" }}>
-        <Box sx={{ margin: "1px", color: "transparent" }}>
+        <Box sx={{ margin: "1px" }}>
           <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: "transparent", boxShadow: "none" }}>
             <Tabs
               value={value}
@@ -146,21 +149,20 @@ const MedicinePage = ({ activeSection, handleSectionChange }) => {
           <Box sx={{ mt: 3 }}>
             {value === 0 && (
               <MedicineSlideshow
-              medicines={pendingMedicines}
-              activeSection="pendingMedicines"
-              handleView={handleView}
-              handleAccept={handleAcceptClick}
-              handleReject={handleReject}
-              selectedMedicine={selectedMedicine}
-              setSelectedMedicine={setSelectedMedicine}
-              authenticityScore={authenticityScore}
-              setAuthenticityScore={setAuthenticityScore}
-              onStatusUpdate={loadAllMedicines}
-              showInfoAlert={showInfoAlert}
-              showSuccessAlert={showSuccessAlert}
-              showErrorAlert={showErrorAlert}
-            />
-            
+                medicines={pendingMedicines}
+                activeSection="pendingMedicines"
+                handleView={handleView}
+                handleAccept={handleAcceptClick}
+                handleReject={handleReject}
+                selectedMedicine={selectedMedicine}
+                setSelectedMedicine={setSelectedMedicine}
+                authenticityScore={authenticityScore}
+                setAuthenticityScore={setAuthenticityScore}
+                onStatusUpdate={loadAllMedicines}
+                showInfoAlert={showInfoAlert}
+                showSuccessAlert={showSuccessAlert}
+                showErrorAlert={showErrorAlert}
+              />
             )}
             {value === 1 && (
               <MedicineSlideshow

@@ -33,21 +33,29 @@ export default function MedicineDetails() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
+
 
   const { addToCart } = useCart();
 
-  const handleAddToCart = () => {
-    addToCart({
-      medicine_id: medicine.medicine_id,
-      name: medicine.name,
-      price: medicine.price,
-      image_url: medicine.image_url,
-      quantity,
-      types: medicine.types || []
-    });
-    router.push(`/userstore/userstorepages/allmedicines/cart`);
+  const handleAddToCart = async () => {
+    setIsLoading(true); // Start loading
+    try {
+      await addToCart({
+        medicine_id: medicine.medicine_id,
+        name: medicine.name,
+        price: medicine.price,
+        image_url: medicine.image_url,
+        quantity,
+        types: medicine.types || []
+      });
+      router.push(`/userstore/userstorepages/allmedicines/cart`);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      setIsLoading(false); // If error, stop loading
+    }
   };
-
+  
   const handleClose = () => setOpen(false);
 
   useEffect(() => {
@@ -236,18 +244,27 @@ export default function MedicineDetails() {
                       Rs. {(medicine.price * quantity).toFixed(2)}
                     </Typography>
                     <Button 
-                      variant="contained" 
-                      size="medium"
-                      onClick={handleAddToCart}
-                      disabled={medicine.quantity <= 0}
-                      sx={{ 
-                        backgroundColor: '#002F6C',
-                        '&:hover': { bgcolor: '#00224E' },
-              py: 1.5
-                      }}
-                    >
-                      Add to Cart
-                    </Button>
+  variant="contained" 
+  size="medium"
+  onClick={handleAddToCart}
+  disabled={medicine.quantity <= 0 || isLoading}
+  sx={{ 
+    backgroundColor: '#002F6C',
+    '&:hover': { bgcolor: '#00224E' },
+    py: 1.5,
+    minWidth: 160,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }}
+>
+  {isLoading ? (
+    <CircularProgress size={24} sx={{ color: 'white' }} />
+  ) : (
+    'Add to Cart'
+  )}
+</Button>
+
                   </Box>
                 </CardContent>
               </Grid>

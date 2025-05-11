@@ -25,9 +25,8 @@ import WarningIcon from '@mui/icons-material/Warning';
 import { fetchMedicinesByStatus } from "../../testingblockchain/medicinework/accepted-rejected/fetch";
 import { getApprovedManufacturers } from "../../testingblockchain/accepted-rejected-manufacturer/fetch";
 import axios from "axios";
-import { rejectMedicine } from "../../../../lib/adminmedicinefetch";
+import { rejectMedicine, fetchRejectionComments } from "../../../../lib/adminmedicinefetch";
 import { fetchPendingMedicines } from "../../testingblockchain/medicinework/pendingmedicine/fetchfunction";
-import { SuccessMsgBox, ErrorMsgBox, InfoMsgBox } from "../../components/MsgBox";
 
 const MedicineSlideshow = ({
   medicines,
@@ -52,6 +51,8 @@ const MedicineSlideshow = ({
   const [manufacturerList, setManufacturerList] = useState([]);
   const [authenticityResults, setAuthenticityResults] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [rejectionComments, setRejectionComments] = useState({});
 
   const columnNameMapping = {
     name: "Medicine Name",
@@ -83,6 +84,7 @@ const MedicineSlideshow = ({
 
   useEffect(() => {
     const fetchMedicines = async () => {
+      setIsLoading(true);
       try {
         let data;
         if (activeSection === "pendingMedicines") {
@@ -90,6 +92,20 @@ const MedicineSlideshow = ({
         } else {
           const status = activeSection === "acceptedMedicines" ? "Accepted" : "Rejected";
           data = await fetchMedicinesByStatus(status);
+          
+          // For rejected medicines, fetch their rejection comments
+          if (status === "Rejected") {
+            const commentsPromises = data.map(async (medicine) => {
+              const comments = await fetchRejectionComments(medicine.tokenId);
+              return { tokenId: medicine.tokenId, comments };
+            });
+            const commentsResults = await Promise.all(commentsPromises);
+            const commentsMap = commentsResults.reduce((acc, curr) => {
+              acc[curr.tokenId] = curr.comments;
+              return acc;
+            }, {});
+            setRejectionComments(commentsMap);
+          }
         }
 
         const updatedData = data.map((medicine) => ({
@@ -101,6 +117,8 @@ const MedicineSlideshow = ({
         setFilteredMedicines(updatedData);
       } catch (error) {
         console.error("Error fetching medicines:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -113,7 +131,8 @@ const MedicineSlideshow = ({
       setSelectedMedicine(selected);
       setDetailsModalOpen(true);
       
-      if (!authenticityResults[medicineId]) {
+      // Only check authenticity for pending medicines if not already checked
+      if (activeSection === "pendingMedicines" && !authenticityResults[medicineId]) {
         const result = await checkMedicineAuthenticity(selected);
         setAuthenticityResults(prev => ({
           ...prev,
@@ -122,57 +141,31 @@ const MedicineSlideshow = ({
       }
     }
   };
-
   const handleStatusUpdate = async (tokenId, newStatus) => {
     try {
       setIsProcessing(true);
       showInfoAlert("Please confirm the transaction in MetaMask...");
-  
+      
+      let success = false;
       if (newStatus === "Accepted") {
-        await handleAccept(tokenId);
+        success = await handleAccept(tokenId);
       } else if (newStatus === "Rejected") {
-        await handleReject(tokenId);
+        success = await handleReject(tokenId);
       }
-  
-      showSuccessAlert(`Medicine ${newStatus === "Accepted" ? "approved" : "rejected"} successfully!`);
-      setDetailsModalOpen(false);
-      await onStatusUpdate(); // Refresh all slideshows
+
+      if (success) {
+        setDetailsModalOpen(false);
+        await onStatusUpdate();
+        showSuccessAlert(`Medicine ${newStatus.toLowerCase()} successfully!`);
+      }
     } catch (error) {
       console.error("Transaction error:", error);
       showErrorAlert("Error confirming medicine status. Try again later.");
-      await onStatusUpdate(); // Still refresh in case partial changes occurred
     } finally {
       setIsProcessing(false);
     }
   };
-  
-  const confirmRejection = async () => {
-    try {
-      setIsProcessing(true);
-      showInfoAlert("Please confirm the rejection in MetaMask...");
-  
-      const medicine = filteredMedicines.find(m => m.tokenId === medicineToReject);
-      if (!medicine) throw new Error("Medicine not found");
-  
-      await rejectMedicine(medicine.tokenId, rejectionComment);
-      await handleReject(medicineToReject);
-  
-      showSuccessAlert("Medicine rejected successfully!");
-      setDetailsModalOpen(false);
-      setShowRejectionDialog(false);
-      setRejectionComment("");
-      setMedicineToReject(null);
-      await onStatusUpdate(); // Refresh all slideshows
-    } catch (error) {
-      console.error("Rejection error:", error);
-      showErrorAlert("Error confirming medicine status. Try again later.");
-      await onStatusUpdate(); // Still refresh
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  
+
   const checkMedicineAuthenticity = async (medicine) => {
     try {
       const response = await axios.post("/api/genai/genai", {
@@ -201,7 +194,32 @@ const MedicineSlideshow = ({
     setShowRejectionDialog(true);
   };
 
-  
+  const confirmRejection = async () => {
+    try {
+      setIsProcessing(true);
+      showInfoAlert("Please confirm the rejection in MetaMask...");
+      
+      const medicine = filteredMedicines.find(m => m.tokenId === medicineToReject);
+      if (!medicine) throw new Error("Medicine not found");
+
+      await rejectMedicine(medicine.tokenId, rejectionComment);
+      const success = await handleReject(medicineToReject);
+      
+      if (success) {
+        setShowRejectionDialog(false);
+        setRejectionComment("");
+        setMedicineToReject(null);
+        await onStatusUpdate();
+        showSuccessAlert("Medicine rejected successfully!");
+      }
+    } catch (error) {
+      console.error("Rejection error:", error);
+      showErrorAlert("Error confirming medicine status. Try again later.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const getStatusChip = (status) => {
     switch (status) {
       case "Accepted": return <Chip label="Approved" color="success" variant="outlined" />;
@@ -232,60 +250,113 @@ const MedicineSlideshow = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMedicines.map((medicine) => (
-              <TableRow key={medicine.tokenId} hover>
-                <TableCell align="center">
-                  {authenticityResults[medicine.tokenId] && (
-                    authenticityResults[medicine.tokenId].isAuthentic ? (
-                      <CheckCircleIcon color="success" fontSize="small" />
-                    ) : (
-                      <WarningIcon color="error" fontSize="small" />
-                    )
-                  )}
-                  {medicine.name}
-                </TableCell>
-                <TableCell align="center">{medicine.medicineId}</TableCell>
-                <TableCell align="center">{getStatusChip(medicine.status)}</TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="contained"
-                    onClick={() => handleViewDetails(medicine.tokenId)}
-                    sx={{ 
-                      backgroundColor: "#002F6C", 
-                      color: "#fff", 
-                      mr: 1,
-                      '&:hover': {
-                        backgroundColor: "#001F4D"
-                      }
-                    }}
-                  >
-                    View Details
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+        {isLoading ? (
+          <TableRow>
+            <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+              <CircularProgress />
+            </TableCell>
+          </TableRow>
+        ) : filteredMedicines.length > 0 ? (
+          filteredMedicines.map((medicine) => (
+            <TableRow key={medicine.tokenId} hover>
+              <TableCell align="center">
+                {authenticityResults[medicine.tokenId] && (
+                  authenticityResults[medicine.tokenId].isAuthentic ? (
+                    <CheckCircleIcon color="success" fontSize="small" />
+                  ) : (
+                    <WarningIcon color="error" fontSize="small" />
+                  )
+                )}
+                {medicine.name}
+              </TableCell>
+              <TableCell align="center">{medicine.medicineId}</TableCell>
+              <TableCell align="center">{getStatusChip(medicine.status)}</TableCell>
+              <TableCell align="center">
+                <Button
+                  variant="contained"
+                  onClick={() => handleViewDetails(medicine.tokenId)}
+                  sx={{ 
+                    backgroundColor: "#002F6C", 
+                    color: "#fff", 
+                    mr: 1,
+                    '&:hover': {
+                      backgroundColor: "#001F4D"
+                    }
+                  }}
+                >
+                  View Details
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                {activeSection === "pendingMedicines" 
+                  ? "No pending medicines available" 
+                  : activeSection === "acceptedMedicines" 
+                    ? "No approved medicines available" 
+                    : "No rejected medicines available"}
+              </Typography>
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+
         </Table>
       </TableContainer>
 
       <Dialog
-        open={detailsModalOpen}
-        onClose={() => !isProcessing && setDetailsModalOpen(false)}
-        fullWidth
-        maxWidth="md"
-        sx={{
-          zIndex: 1700,
-          '& .MuiBackdrop-root': {
-            backgroundColor: 'rgba(0,0,0,0.7)'
-          }
-        }}
-      >
-        <DialogTitle sx={{ backgroundColor: "#002F6C", color: "white" }}>
-          Medicine Details
-        </DialogTitle>
+  open={detailsModalOpen}
+  onClose={() => !isProcessing && setDetailsModalOpen(false)}
+  fullWidth
+  maxWidth="md"
+  sx={{
+    zIndex: 1700,
+    '& .MuiBackdrop-root': {
+      backgroundColor: 'rgba(0,0,0,0.7)' // 🔄 Back to default black overlay
+    },
+    '& .MuiPaper-root': {
+      backgroundColor: '#fff',           // 🔄 Default paper
+      borderLeft: 'none'                 // 🔄 Remove colored border
+    }
+  }}
+>
+  <DialogTitle sx={{
+    backgroundColor: "#002F6C", // 🔄 Default blue
+    color: "white"
+  }}>
+    Medicine Details
+  </DialogTitle>
+
+
+
+
+
         <DialogContent dividers>
+
+        {activeSection === "pendingMedicines" && 
+  selectedMedicine && 
+  !authenticityResults[selectedMedicine.tokenId] && (
+    <Box sx={{
+      mb: 2,
+      p: 2,
+      borderRadius: 1,
+      backgroundColor: '#FFF8E1',
+      borderLeft: '4px solid #FFC107',
+      display: 'flex',
+      alignItems: 'center'
+    }}>
+      <CircularProgress size={20} sx={{ mr: 2 }} />
+      <Typography variant="body2" color="text.secondary">
+        Checking medicine authenticity...
+      </Typography>
+    </Box>
+)}
           {selectedMedicine && (
             <Box sx={{ mt: 2 }}>
+              {/* Authenticity Result Box */}
               {authenticityResults[selectedMedicine.tokenId] && (
                 <Box sx={{ 
                   mb: 3,
@@ -317,6 +388,9 @@ const MedicineSlideshow = ({
                   </Typography>
                 </Box>
               )}
+
+
+
               <Box sx={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
@@ -398,6 +472,28 @@ const MedicineSlideshow = ({
                 </Box>
               )}
 
+{/* Rejection Comments for Rejected Medicines */}
+{selectedMedicine.status === "Rejected" && rejectionComments[selectedMedicine.tokenId] && (
+                <Box sx={{ 
+                  mb: 3,
+                  p: 2,
+                  borderRadius: 1,
+                  backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                  borderLeft: '4px solid #F44336'
+                }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#F44336', mb: 1 }}>
+                    Rejection Reason
+                  </Typography>
+                  {rejectionComments[selectedMedicine.tokenId].map((comment, index) => (
+                    <Typography key={index} variant="body2" sx={{ color: '#F44336' }}>
+                      {comment.rejection_comments}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+              
+
+              
               {activeSection === "pendingMedicines" && selectedMedicine.status === "Pending" && (
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
                   <Button
@@ -405,8 +501,9 @@ const MedicineSlideshow = ({
                     onClick={() => handleStatusUpdate(selectedMedicine.tokenId, "Accepted")}
                     sx={{ backgroundColor: "#00C851", color: "#fff" }}
                     disabled={isProcessing}
+                    endIcon={isProcessing ? <CircularProgress size={24} color="inherit" /> : null}
                   >
-                    {isProcessing ? <CircularProgress size={24} /> : "Accept"}
+                    {isProcessing ? "Processing..." : "Accept"}
                   </Button>
                   <Button
                     variant="contained"
@@ -414,7 +511,7 @@ const MedicineSlideshow = ({
                     sx={{ backgroundColor: "#ff4444", color: "#fff" }}
                     disabled={isProcessing}
                   >
-                    {isProcessing ? <CircularProgress size={24} /> : "Reject"}
+                    Reject
                   </Button>
                 </Box>
               )}
@@ -438,6 +535,7 @@ const MedicineSlideshow = ({
         sx={{
           zIndex: 1800,
           '& .MuiBackdrop-root': {
+            transition: 'background-color 0.5s ease',
             backgroundColor: 'rgba(0,0,0,0.8)'
           }
         }}

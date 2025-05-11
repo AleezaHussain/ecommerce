@@ -50,6 +50,7 @@ const MedicineDetails = ({
             default: return "black";
         }
     };
+    
 
     return (
         <Box sx={{ 

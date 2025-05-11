@@ -19,6 +19,10 @@ export default function CartPage() {
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const { loadGuestCart } = useCart();
+
+
 
   const formatCurrency = (amount) => {
     return `Rs. ${amount.toFixed(2)}`;
@@ -53,6 +57,8 @@ export default function CartPage() {
       </>
     );
   }
+
+  
 
   return (
     <>
@@ -181,17 +187,36 @@ export default function CartPage() {
                   </Box>
                   
                   <Button
-                    variant="contained"
-                    fullWidth
-                    sx={{
-                      backgroundColor: '#002F6C',
-                      '&:hover': { bgcolor: '#00224E' },
-              py: 1.5
-                    }}
-                    onClick={() => router.push('/userstore/userstorepages/allmedicines/checkout')}
-                  >
-                    Proceed to Checkout
-                  </Button>
+  variant="contained"
+  fullWidth
+  onClick={async () => {
+    setCheckoutLoading(true); // Start loading
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Optional: slight delay for smoother UX
+      router.push('/userstore/userstorepages/allmedicines/checkout');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      setCheckoutLoading(false); // Stop loading if error
+    }
+  }}
+  disabled={checkoutLoading}
+  sx={{
+    backgroundColor: '#002F6C',
+    '&:hover': { bgcolor: '#00224E' },
+    py: 1.5,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '48px' // Ensures button height is stable when spinner appears
+  }}
+>
+  {checkoutLoading ? (
+    <CircularProgress size={24} sx={{ color: 'white' }} />
+  ) : (
+    'Proceed to Checkout'
+  )}
+</Button>
+
                 </Card>
               </Grid>
             </Grid>

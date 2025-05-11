@@ -1,80 +1,131 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { Box, Typography, Grid, Button } from "@mui/material";
+import { Box, Typography, Grid, Card, CardActionArea, CardContent } from "@mui/material";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 const CategorySection = () => {
   const categories = [
-    { name: "Injection", image: "/injection-icon.webp" },
-    { name: "Syrup", image: "/syrup-icon.jpeg" },
-    { name: "Antibiotic", image: "/antibiotic-icon.png" },
-    { name: "Capsule", image: "/tablet-icon.png" }
+    { 
+      name: "Injection", 
+      image: "/injection-icon.webp",
+      description: "Fast-acting treatments delivered directly into the bloodstream."
+    },
+    { 
+      name: "Syrup", 
+      image: "/syrup-icon.jpeg",
+      description: "Easy-to-swallow liquid medicines for kids and adults."
+    },
+    { 
+      name: "Antibiotic", 
+      image: "/antibiotic-icon.png",
+      description: "Powerful medicines to fight bacterial infections effectively."
+    },
+    { 
+      name: "Capsule", 
+      image: "/tablet-icon.png",
+      description: "Convenient oral medicines with controlled release formulas."
+    }
   ];
 
   return (
-    <Box sx={{ mt: 4, mb: 6, px: 2 }}>
+    <Box
+      sx={{
+        mt: 8,
+        mb: 10,
+        px: 3,
+        py: 6,
+        backgroundImage: `url('/categoriesbg.png')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+        borderRadius: "20px",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.1)"
+      }}
+    >
       <Typography
-        variant="h5"
+        variant="h4"
         sx={{
           fontWeight: "bold",
-          mb: 3,
-          color: "black",
-          textAlign: "left",
-          pl: 2,
+          mb: 5,
+          color: "#002F6C",
+          textAlign: "center",
+          textShadow: "1px 1px 2px rgba(255,255,255,0.6)"
         }}
       >
-        Explore By Categories
+        Explore by Categories
       </Typography>
 
-      <Grid container spacing={3} justifyContent="center">
+      <Grid container spacing={4} justifyContent="center">
         {categories.map((category, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Link href={`/userstore/userstorepages/${category.name}`} passHref>
-              <Button
-                fullWidth
-                sx={{
-                  height: "120px",
-                  backgroundColor: "white",
-                  color: "#002F6C",
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  fontSize: "1.2rem",
-                  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.15)",
-                    backgroundColor: "white",
-                  },
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  p: 2,
-                  textAlign: "left",
-                }}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                viewport={{ once: true }}
               >
-                <Box
+                <Card
                   sx={{
-                    width: 100,
-                    height: 100,
-                    mr: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    boxShadow: "0 8px 20px rgba(0, 0, 0, 0.1)",
+                    backdropFilter: "blur(4px)",
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-8px) scale(1.02)",
+                      boxShadow: "0 12px 28px rgba(0, 0, 0, 0.2)",
+                    },
                   }}
                 >
-                  <Image
-                    src={category.image}
-                    alt={category.name}
-                    width={1000}
-                    height={1000}
-                    style={{ objectFit: "contain" }}
-                  />
-                </Box>
-                {category.name}
-              </Button>
+                  <CardActionArea sx={{ p: 3 }}>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 120,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mb: 2,
+                      }}
+                    >
+                      <Image
+                        src={category.image}
+                        alt={category.name}
+                        width={200}
+                        height={200}
+                        style={{ objectFit: "contain" }}
+                      />
+                    </Box>
+                    <CardContent sx={{ textAlign: "center" }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: "bold", 
+                          color: "#002F6C", 
+                          mb: 1 
+                        }}
+                      >
+                        {category.name}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: "#555", 
+                          fontSize: "0.85rem",
+                          minHeight: "40px",
+                        }}
+                      >
+                        {category.description}
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </motion.div>
             </Link>
           </Grid>
         ))}

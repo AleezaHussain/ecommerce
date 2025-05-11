@@ -10,9 +10,12 @@ import {
   CardContent,
   Button,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import Allnavbar from "../../sections/Allnavbar";
 import { FooterSection } from "../../sections/FooterSection";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const famousMedicines = [
   { name: "Panadol", brand: "GSK", category: "Pain Relief", packSize: "20 Tablets", price: "Rs 200", discount: "10% Off", originalPrice: "Rs 250", image: "/panadol.webp" },
@@ -26,6 +29,38 @@ const famousMedicines = [
 ];
 
 const FamousMedicinesPage = () => {
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000); // match the timeout from Allnavbar
+  
+    return () => clearTimeout(timeout);
+  }, []);
+  
+   // ✅ Show loader inside Container before content
+   if (isPageLoading) {
+    return (
+      <>
+        <Allnavbar />
+        <Container
+          maxWidth="lg"
+          sx={{
+            minHeight: 'calc(100vh - 200px)',
+            mt: 15,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <CircularProgress />
+        </Container>
+        <FooterSection />
+      </>
+    );
+  }
+  
+  
   return (
     <>
       <Allnavbar />
@@ -38,6 +73,7 @@ const FamousMedicinesPage = () => {
           paddingTop: '40px'
         }}
       >
+        
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" sx={{ 
             fontWeight: "bold", 

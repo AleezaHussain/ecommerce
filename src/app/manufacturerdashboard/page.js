@@ -454,19 +454,19 @@ const fetchPendingMedicines = async () => {
     };
 
     return (
-      <Modal open={open} onClose={onClose}>
+      <Modal open={open} onClose={onClose} sx={{ zIndex: 1700 }}>
         <Box sx={{ 
           position: "absolute", 
-          top: "55%", 
+          top: "53%", 
           left: "50%", 
           transform: "translate(-50%, -50%)", 
           width: "80%", 
           maxWidth: "800px",
-          maxHeight: "80vh",
+          maxHeight: "78vh",
           overflowY: "auto",
           boxShadow: 24, 
           p: 4, 
-          borderRadius: 2,
+          borderRadius: 0,
           backgroundColor: "#ffffff",
         }}>
           {/* Close button (X) in top right corner */}
@@ -514,29 +514,47 @@ const fetchPendingMedicines = async () => {
   };
 
   return (
-    <Box sx={{ 
-      display: "flex", 
-      flexDirection: "column", 
-      minHeight: "100vh", 
-      backgroundColor: "#f5f7fa",
-      position: 'relative',
-    }}>
-      {/* Main Content - will be blurred when wallet is not approved */}
+  <Box sx={{ 
+    display: "flex", 
+    flexDirection: "column", 
+    minHeight: "100vh", 
+    backgroundColor: "#f5f7fa",
+    position: 'relative',
+  }}>
+    
+    {/* ✅ Overlay that dims the entire page including NavBar */}
+    {( saleModalOpen || editModalOpen || detailsModalOpen) && (
       <Box sx={{
-        filter: !walletStatus.loading && !walletStatus.approved ? 'blur(5px)' : 'none',
-        pointerEvents: !walletStatus.loading && !walletStatus.approved ? 'none' : 'auto',
-        width: '100%',
-        height: '100%',
-        transition: 'filter 0.3s ease'
-      }}>
-        <NavBar 
-  walletStatus={walletStatus} 
-  manufacturerDetails={manufacturerDetails}
-  onLogout={() => {
-    // Clear any session data if needed
-    router.push('/manufacturerlogin');
-  }}
-/>
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        zIndex: 1600
+      }} />
+    )}
+
+    {/* ✅ Main Content */}
+    <Box sx={{
+      filter: !walletStatus.loading && !walletStatus.approved ? 'blur(5px)' : 'none',
+      pointerEvents: !walletStatus.loading && !walletStatus.approved ? 'none' : 'auto',
+      width: '100%',
+      height: '100%',
+      transition: 'filter 0.3s ease'
+    }}>
+      <NavBar
+        walletStatus={walletStatus}
+        manufacturerDetails={manufacturerDetails}
+        onLogout={() => {
+          localStorage.removeItem("manufacturer");
+          localStorage.removeItem("token");
+          setTimeout(() => {
+            window.location.href = "/manufacturerlogin";
+          }, 1000);
+        }}
+      />
+
         {/* Secondary Navigation */}
         <Box sx={{ 
           backgroundColor: 'white',
@@ -592,6 +610,7 @@ const fetchPendingMedicines = async () => {
           maxWidth: '1600px',
           margin: '100px auto 0px auto',
           width: '100%',
+          
           
         }}>
           {activeView === 'statistics' ? (
@@ -732,38 +751,38 @@ const fetchPendingMedicines = async () => {
         )}
         </Box>
 
-        {/* Message Boxes */}
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 2000,
-            pointerEvents: "none",
-          }}
-        >
-          <SuccessMsgBox
-            open={successMsg.open}
-            onClose={() => setSuccessMsg({ open: false, message: "" })}
-            message={successMsg.message}
-          />
-          <ErrorMsgBox
-            open={errorMsg.open}
-            onClose={() => setErrorMsg({ open: false, message: "" })}
-            message={errorMsg.message}
-          />
-          <InfoMsgBox
-            open={infoMsg.open}
-            onClose={() => setInfoMsg({ open: false, message: "" })}
-            message={infoMsg.message}
-          />
-        </Box>  
-      
+        {/* ✅ Message Boxes */}
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 5000, // 🟢 Always on top
+        pointerEvents: "none",
+      }}
+    >
+      <SuccessMsgBox
+        open={successMsg.open}
+        onClose={() => setSuccessMsg({ open: false, message: "" })}
+        message={successMsg.message}
+      />
+      <ErrorMsgBox
+        open={errorMsg.open}
+        onClose={() => setErrorMsg({ open: false, message: "" })}
+        message={errorMsg.message}
+      />
+      <InfoMsgBox
+        open={infoMsg.open}
+        onClose={() => setInfoMsg({ open: false, message: "" })}
+        message={infoMsg.message}
+      />
+    </Box>
+
         <Modal open={openModal} onClose={handleCloseModal}>
           <Box sx={{ 
             position: "absolute", 
@@ -804,10 +823,10 @@ const fetchPendingMedicines = async () => {
           </Box>
         </Modal>
 
-        <Modal open={saleModalOpen} onClose={handleCloseSaleModal}>
+        <Modal open={saleModalOpen} onClose={handleCloseSaleModal} sx={{ zIndex: 1700 }}>
   <Box sx={{ 
     position: "absolute", 
-    top: "59.5%", 
+    top: "52%", 
     left: "50%", 
     transform: "translate(-50%, -50%)", 
     width: 400,
@@ -891,7 +910,7 @@ const fetchPendingMedicines = async () => {
     )}
   </Box>
 </Modal>
-        <Modal open={editModalOpen} onClose={handleCloseEditModal}>
+        <Modal open={editModalOpen} onClose={handleCloseEditModal} sx={{ zIndex: 1700 }}>
           <Box sx={{
             position: "absolute",
             top: "55%",
@@ -996,72 +1015,74 @@ const fetchPendingMedicines = async () => {
           </Box>
         </Modal>
 
-        <MedicineDetailsModal
-          open={detailsModalOpen}
-          onClose={() => setDetailsModalOpen(false)}
-          medicine={selectedMedicine}
-          onAddToSale={handleOpenSaleModal}
-          showSaleButton={activeTab === "accepted"}
-          isInSales={selectedMedicine ? 
-            salesData.some(sale => sale.tokenId === selectedMedicine.tokenId) : 
-            false
-          }
-        />
+        
       </Box>
+      <MedicineDetailsModal
+  open={detailsModalOpen}
+  onClose={() => setDetailsModalOpen(false)}
+  medicine={selectedMedicine}
+  onAddToSale={handleOpenSaleModal}
+  showSaleButton={activeTab === "accepted"}
+  isInSales={selectedMedicine ? 
+    salesData.some(sale => sale.tokenId === selectedMedicine.tokenId) : 
+    false
+  }
+  sx={{ zIndex: 1200 }} // Add this to ensure it's above navbar
+/>
       
-      {(!walletStatus.loading && !walletStatus.approved) && (
-  <Box sx={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    zIndex: 2000,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: 'white',
-    textAlign: 'center',
-    p: 3
-  }}>
-    <LockIcon sx={{ fontSize: 80, mb: 3, color: 'white' }} />
-    <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
-      Access Denied
-    </Typography>
-    {walletStatus.connected ? (
-      <>
-        <Typography variant="h6" sx={{ mb: 3 }}>
-          Your manufacturer account is not approved
+      {/* ✅ Access Denied overlay */}
+    {(!walletStatus.loading && !walletStatus.approved) && (
+      <Box sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        zIndex: 3000,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        textAlign: 'center',
+        p: 3
+      }}>
+        <LockIcon sx={{ fontSize: 80, mb: 3, color: 'white' }} />
+        <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
+          Access Denied
         </Typography>
-        <Typography variant="body1" sx={{ maxWidth: '600px', mb: 4 }}>
-          The connected wallet is not registered as an approved manufacturer.
-          Please contact the administrator if you believe this is an error.
-        </Typography>
-      </>
-    ) : (
-      <>
-        <Typography variant="h6" sx={{ mb: 3 }}>
-          No approved wallet connected
-        </Typography>
-        <Typography variant="body1" sx={{ maxWidth: '600px', mb: 4 }}>
-          Please connect an approved manufacturer wallet to access this dashboard.
-        </Typography>
-      </>
+        {walletStatus.connected ? (
+          <>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Your manufacturer account is not approved
+            </Typography>
+            <Typography variant="body1" sx={{ maxWidth: '600px', mb: 4 }}>
+              The connected wallet is not registered as an approved manufacturer.
+              Please contact the administrator if you believe this is an error.
+            </Typography>
+          </>
+        ) : (
+          <>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              No approved wallet connected
+            </Typography>
+            <Typography variant="body1" sx={{ maxWidth: '600px', mb: 4 }}>
+              Please connect an approved manufacturer wallet to access this dashboard.
+            </Typography>
+          </>
+        )}
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => router.push('/manufacturerlogin')}
+          sx={{ mt: 2 }}
+        >
+          Go to Login
+        </Button>
+      </Box>
     )}
-    <Button 
-      variant="contained" 
-      color="primary"
-      onClick={() => router.push('/manufacturerlogin')}
-      sx={{ mt: 2 }}
-    >
-      Go to Login
-    </Button>
-  </Box>
-)}
-
-    </Box>
+</Box>
   );
 };
 

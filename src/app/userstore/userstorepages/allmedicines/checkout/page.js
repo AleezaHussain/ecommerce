@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { fetchAllMedicines, batchDecrementQuantities } from '../../../../../../lib/saleMedicineDb';
-import { validateCartItems } from '../../../../../../lib/saleMedicineDb'; // Adjust path as needed
+import { validateCartItems } from '../../../../../../lib/saleMedicineDb';
+import axios from 'axios';
 
 import { 
   Box, 
@@ -19,7 +20,8 @@ import {
   TextField, 
   Checkbox, 
   Divider,
-  InputAdornment
+  InputAdornment,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
@@ -30,6 +32,7 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import { useCart } from '../../../../../app/context/CartContext';
 import { FooterSection } from '../../../sections/FooterSection';
 import Allnavbar from '../../../sections/Allnavbar';
+import NavBar from '../../../../components/NavBar';
 
 // Custom styling for step icons
 const CustomStepIcon = styled('div')(
@@ -124,29 +127,30 @@ const CheckoutStepper = ({ activeStep }) => {
 };
 
 // Shipping Form Component
-const ShippingForm = ({ formData, onSubmit }) => {
+const ShippingForm = ({ formData, onSubmit, orderTotal }) => {
   const [formState, setFormState] = useState({
-    firstName: formData.firstName || '',
-    lastName: formData.lastName || '',
+    name: formData.name || '',
     email: formData.email || '',
     phone: formData.phone || '',
     address: formData.address || '',
-    city: formData.city || '',
-    state: formData.state || '',
-    postalCode: formData.postalCode || '',
-    deliveryInstructions: formData.deliveryInstructions || '',
-    hasPrescription: formData.hasPrescription !== undefined ? formData.hasPrescription : true
+    amount: orderTotal || ''  // Use orderTotal prop directly
   });
   
   const [errors, setErrors] = useState({});
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    setFormState(prev => ({
+      ...prev,
+      amount: orderTotal || ''
+    }));
+  }, [orderTotal]);
 
   const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
+    const { name, value } = e.target;
     setFormState({
       ...formState,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     });
     
     // Clear error when field is edited
@@ -160,32 +164,35 @@ const ShippingForm = ({ formData, onSubmit }) => {
 
   const validate = () => {
     const newErrors = {};
-    
-    if (!formState.firstName) newErrors.firstName = 'First name is required';
-    if (!formState.lastName) newErrors.lastName = 'Last name is required';
+  
+    if (!formState.name) newErrors.name = 'Full name is required';
     if (!formState.email) newErrors.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
       newErrors.email = 'Invalid email format';
     }
-    
+  
     if (!formState.phone) newErrors.phone = 'Phone number is required';
-    else if (formState.phone.length < 10) {
-      newErrors.phone = 'Phone number should be at least 10 digits';
+    else if (!/^0\d{10}$/.test(formState.phone)) {
+      newErrors.phone = 'Phone number must start with 0 and be 11 digits (e.g., 03001234567)';
     }
-    
+  
     if (!formState.address) newErrors.address = 'Address is required';
-    if (!formState.city) newErrors.city = 'City is required';
-    if (!formState.state) newErrors.state = 'State/Province is required';
-    if (!formState.postalCode) newErrors.postalCode = 'Postal code is required';
-    
+  
+    if (!formState.amount) newErrors.amount = 'Amount is required';
+    else if (isNaN(formState.amount) || Number(formState.amount) <= 200) {
+      newErrors.amount = 'Amount must be greater than 200 PKR';
+    }
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  const handleSubmit = (e) => {
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formState);
+      setIsSubmitting(true);
+      await onSubmit(formState);
+      setIsSubmitting(false);
     }
   };
 
@@ -197,31 +204,16 @@ const ShippingForm = ({ formData, onSubmit }) => {
       
       <form id="shipping-form" onSubmit={handleSubmit}>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12}>
             <TextField
-              name="firstName"
-              label="First Name *"
+              name="name"
+              label="Customer Name *"
               variant="outlined"
               fullWidth
-              value={formState.firstName}
+              value={formState.name}
               onChange={handleChange}
-              error={!!errors.firstName}
-              helperText={errors.firstName}
-              InputLabelProps={{ shrink: true }}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="lastName"
-              label="Last Name *"
-              variant="outlined"
-              fullWidth
-              value={formState.lastName}
-              onChange={handleChange}
-              error={!!errors.lastName}
-              helperText={errors.lastName}
+              error={!!errors.name}
+              helperText={errors.name || "Enter your full name (first and last name)"}
               InputLabelProps={{ shrink: true }}
               sx={{ mb: 2 }}
             />
@@ -230,7 +222,7 @@ const ShippingForm = ({ formData, onSubmit }) => {
           <Grid item xs={12}>
             <TextField
               name="email"
-              label="Email Address *"
+              label="Email *"
               type="email"
               variant="outlined"
               fullWidth
@@ -252,7 +244,7 @@ const ShippingForm = ({ formData, onSubmit }) => {
               value={formState.phone}
               onChange={handleChange}
               error={!!errors.phone}
-              helperText={errors.phone}
+              helperText={errors.phone || "Enter in international format (e.g., 03001234567)"}
               InputLabelProps={{ shrink: true }}
               sx={{ mb: 2 }}
             />
@@ -273,91 +265,43 @@ const ShippingForm = ({ formData, onSubmit }) => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={4}>
-            <TextField
-              name="city"
-              label="City *"
-              variant="outlined"
-              fullWidth
-              value={formState.city}
-              onChange={handleChange}
-              error={!!errors.city}
-              helperText={errors.city}
-              InputLabelProps={{ shrink: true }}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={4}>
-            <TextField
-              name="state"
-              label="State/Province *"
-              variant="outlined"
-              fullWidth
-              value={formState.state}
-              onChange={handleChange}
-              error={!!errors.state}
-              helperText={errors.state}
-              InputLabelProps={{ shrink: true }}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={4}>
-            <TextField
-              name="postalCode"
-              label="Postal Code *"
-              variant="outlined"
-              fullWidth
-              value={formState.postalCode}
-              onChange={handleChange}
-              error={!!errors.postalCode}
-              helperText={errors.postalCode}
-              InputLabelProps={{ shrink: true }}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          
           <Grid item xs={12}>
-            <TextField
-              name="deliveryInstructions"
-              label="Delivery Instructions (Optional)"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={3}
-              value={formState.deliveryInstructions}
-              onChange={handleChange}
-              placeholder="Special instructions for delivery (e.g., gate code, landmark)"
-              InputLabelProps={{ shrink: true }}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  name="hasPrescription"
-                  checked={formState.hasPrescription}
-                  onChange={handleChange}
-                  color="primary"
-                />
-              }
-              label={
-                <Typography variant="body2">
-                  I confirm that I have a valid prescription for all prescription medications in my order.
-                </Typography>
-              }
-            />
+          <TextField
+  name="amount"
+  label="Amount (PKR)"
+  variant="outlined"
+  fullWidth
+  value={formState.amount}
+  onChange={handleChange} // ✅ Make it editable
+  error={!!errors.amount}
+  helperText={errors.amount}
+  InputLabelProps={{ shrink: true }}
+  sx={{ mb: 2 }}
+/>
+
           </Grid>
         </Grid>
+        
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button 
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting}
+            sx={{
+              bgcolor: '#002F6C',
+              '&:hover': { bgcolor: '#00224E' },
+              minWidth: 150
+            }}
+          >
+            {isSubmitting ? <CircularProgress size={24} /> : 'Continue to Payment'}
+          </Button>
+        </Box>
       </form>
     </Box>
   );
 };
 
-// Payment Method Selector Component
+// Payment Method Selector Component (simplified for PayPro integration)
 const PaymentMethodSelector = ({ selectedMethod, onSelect, disabled = false }) => {
   return (
     <Box>
@@ -379,14 +323,14 @@ const PaymentMethodSelector = ({ selectedMethod, onSelect, disabled = false }) =
           sx={{ 
             mb: 2,
             border: '2px solid',
-            borderColor: selectedMethod === 'creditCard' ? '#002F6C' : 'transparent',
-            bgcolor: selectedMethod === 'creditCard' ? 'rgba(0, 47, 108, 0.05)' : 'transparent',
+            borderColor: selectedMethod === 'paypro' ? '#002F6C' : 'transparent',
+            bgcolor: selectedMethod === 'paypro' ? 'rgba(0, 47, 108, 0.05)' : 'transparent',
             borderRadius: 1,
             transition: 'all 0.2s'
           }}
         >
           <FormControlLabel
-            value="creditCard"
+            value="paypro"
             control={<Radio color="primary" />}
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -401,7 +345,7 @@ const PaymentMethodSelector = ({ selectedMethod, onSelect, disabled = false }) =
                 >
                   <CreditCardIcon sx={{ color: '#1976d2' }} />
                 </Box>
-                <Typography variant="body1">Credit/Debit Card</Typography>
+                <Typography variant="body1">Secure Online Payment (PayPro)</Typography>
               </Box>
             }
             sx={{ 
@@ -414,59 +358,6 @@ const PaymentMethodSelector = ({ selectedMethod, onSelect, disabled = false }) =
               }
             }}
           />
-        </Box>
-        
-        <Box 
-          sx={{ 
-            mb: 2,
-            border: '2px solid',
-            borderColor: selectedMethod === 'bankTransfer' ? '#002F6C' : 'transparent',
-            bgcolor: selectedMethod === 'bankTransfer' ? 'rgba(0, 47, 108, 0.05)' : 'transparent',
-            borderRadius: 1,
-            transition: 'all 0.2s'
-          }}
-        >
-          <FormControlLabel
-            value="bankTransfer"
-            control={<Radio color="primary" />}
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box 
-                  sx={{ 
-                    mr: 2, 
-                    bgcolor: 'rgba(245, 124, 0, 0.1)', 
-                    p: 1, 
-                    borderRadius: '50%', 
-                    display: 'flex' 
-                  }}
-                >
-                  <AccountBalanceIcon sx={{ color: '#f57c00' }} />
-                </Box>
-                <Typography variant="body1">Bank Transfer</Typography>
-              </Box>
-            }
-            sx={{ 
-              py: 1.5, 
-              px: 1, 
-              width: '100%', 
-              m: 0,
-              '& .MuiFormControlLabel-label': { 
-                width: '100%'
-              }
-            }}
-          />
-        </Box>
-        
-        <Box 
-          sx={{ 
-            mb: 2,
-            border: '2px solid',
-            borderColor: selectedMethod === 'cashOnDelivery' ? '#002F6C' : 'transparent',
-            bgcolor: selectedMethod === 'cashOnDelivery' ? 'rgba(0, 47, 108, 0.05)' : 'transparent',
-            borderRadius: 1,
-            transition: 'all 0.2s'
-          }}
-        >
           <FormControlLabel
             value="cashOnDelivery"
             control={<Radio color="primary" />}
@@ -499,41 +390,13 @@ const PaymentMethodSelector = ({ selectedMethod, onSelect, disabled = false }) =
         </Box>
       </RadioGroup>
       
-      {selectedMethod === 'creditCard' && (
+      {selectedMethod === 'paypro' && (
         <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Please provide your card information:
+            You will be redirected to PayPro's secure payment page to complete your transaction.
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            This is just a placeholder in this demo. In a real application, we would include a secure payment form here.
-          </Typography>
-        </Paper>
-      )}
-      
-      {selectedMethod === 'bankTransfer' && (
-        <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            Bank Transfer Information:
-          </Typography>
-          <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
-            <Box>Bank: National Bank</Box>
-            <Box>Account Name: MediStore Pharmacy</Box>
-            <Box>Account Number: XXXX-XXXX-XXXX-1234</Box>
-            <Box>IFSC Code: NATL0012345</Box>
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Please include your order number in the transfer reference.
-          </Typography>
-        </Paper>
-      )}
-      
-      {selectedMethod === 'cashOnDelivery' && (
-        <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            Cash on Delivery Details:
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Pay with cash upon delivery. Please ensure you have the exact amount ready for our delivery personnel.
+            PayPro supports all major credit/debit cards and mobile payment methods.
           </Typography>
         </Paper>
       )}
@@ -544,20 +407,9 @@ const PaymentMethodSelector = ({ selectedMethod, onSelect, disabled = false }) =
 // Order Summary Component
 const OrderSummary = ({ 
   cartItems, 
-  orderSummary, 
-  activeStep,
-  onContinueToPayment,
-  onReturnToShop,
+  orderSummary,
   handleRemoveItem
 }) => {
-  const [promoCode, setPromoCode] = useState('');
-
-  const handleApplyPromo = () => {
-    if (promoCode.trim()) {
-      alert(`Promo code "${promoCode}" applied in a real application`);
-    }
-  };
-
   const formatCurrency = (amount) => {
     return `Rs. ${amount.toFixed(2)}`;
   };
@@ -633,37 +485,6 @@ const OrderSummary = ({
         )}
       </Box>
       
-      {/* Promo Code */}
-      <Box sx={{ display: 'flex', mb: 3 }}>
-        <TextField
-          placeholder="Promo code"
-          variant="outlined"
-          size="small"
-          value={promoCode}
-          onChange={(e) => setPromoCode(e.target.value)}
-          fullWidth
-          sx={{ 
-            '& .MuiOutlinedInput-root': {
-              borderTopRightRadius: 0,
-              borderBottomRightRadius: 0,
-            }
-          }}
-        />
-        <Button 
-          variant="contained"
-          onClick={handleApplyPromo}
-          sx={{ 
-            bgcolor: '#002F6C',
-            '&:hover': { bgcolor: '#00224E' },
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-            whiteSpace: 'nowrap'
-          }}
-        >
-          Apply
-        </Button>
-      </Box>
-      
       {/* Cost Breakdown */}
       <Box sx={{ mb: 2 }}>
         <Box sx={{ 
@@ -725,42 +546,6 @@ const OrderSummary = ({
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 3 }}>
         Including VAT/GST
       </Typography>
-      
-      {/* Action Buttons */}
-      <Box sx={{ mt: 3 }}>
-        {activeStep === 1 && (
-          <Button 
-            variant="contained" 
-            fullWidth
-            onClick={onContinueToPayment}
-            sx={{
-              bgcolor: '#002F6C',
-              '&:hover': { bgcolor: '#00224E' },
-              py: 1.5
-            }}
-          >
-            Continue to Payment
-          </Button>
-        )}
-        
-        {activeStep === 2 && (
-          <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}>
-            Please select a payment method to continue
-          </Typography>
-        )}
-        
-        <Button 
-          variant="text" 
-          fullWidth
-          onClick={onReturnToShop}
-          sx={{
-            color: '#002F6C',
-            mt: 1
-          }}
-        >
-          Return to Shop
-        </Button>
-      </Box>
     </Paper>
   );
 };
@@ -771,25 +556,23 @@ const Checkout = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(1);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
   const [shippingData, setShippingData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     phone: '',
     address: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    deliveryInstructions: '',
-    hasPrescription: true
+    amount: ''
   });
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const { 
     cart, 
     removeFromCart, 
     updateCart, 
-    cartCount, 
-    // updateCartCount, // Now properly destructured from useCart
     clearCart 
   } = useCart();
   
@@ -799,8 +582,88 @@ const Checkout = () => {
     tax: 0,
     total: 0
   });
+
   const [initialLoad, setInitialLoad] = useState(true);
   const searchParams = useSearchParams();
+
+  // Check payment status after redirection
+  const checkPaymentStatus = async (orderNumber) => {
+    if (!orderNumber) {
+      alert("No order number found.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/payment/status?orderNumber=${orderNumber}`);
+      if (res.redirected) {
+        // Redirect handled by API
+        window.location.href = res.url;
+      } else {
+        const data = await res.json();
+        if (data.status === 'completed') {
+          // Clear cart on successful payment
+          clearCart();
+          setActiveStep(3);
+        } else {
+          alert("Payment Status: " + data.status);
+        }
+      }
+    } catch (error) {
+      console.error("Status check failed:", error);
+      alert("Error checking payment status");
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
+  // Auto-check on mount if we came back from PayPro
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const cameBackFromPayment = url.searchParams.get("paypro");
+    const orderNumber = localStorage.getItem('orderNumber');
+
+    if (cameBackFromPayment && orderNumber) {
+      setIsCheckingStatus(true);
+      checkPaymentStatus(orderNumber);
+    }
+  }, []);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const token = localStorage.getItem('token');
+  
+      if (!token) {
+        setSessionExpired(true);
+        return;
+      }
+  
+      try {
+        const res = await fetch('/api/validate-token', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+  
+        if (!res.ok) {
+          setSessionExpired(true);
+        } else {
+          // Set user email if logged in
+          const user = JSON.parse(localStorage.getItem('user'));
+          if (user?.email) {
+            setShippingData(prev => ({
+              ...prev,
+              email: user.email
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Token validation failed:', error);
+        setSessionExpired(true);
+      }
+    };
+  
+    checkSession();
+  }, []);
 
   // Load cart items from URL params
   useEffect(() => {
@@ -822,7 +685,7 @@ const Checkout = () => {
           };
         }).filter(item => item !== null);
   
-        updateCart(cartItems); // This will automatically update the count
+        updateCart(cartItems);
         setInitialLoad(false);
       } catch (error) {
         console.error("Error loading medicines:", error);
@@ -832,7 +695,8 @@ const Checkout = () => {
     if (medicineIds.length > 0) {
       loadMedicines();
     }
-  }, [searchParams, updateCart]); // Remove updateCartCount from dependencies
+  }, [searchParams, updateCart]);
+
   // Calculate order summary
   useEffect(() => {
     let subtotal = 0;
@@ -842,26 +706,28 @@ const Checkout = () => {
     const taxRate = 0.05; // 5% tax
     const tax = subtotal * taxRate;
     const total = subtotal + orderSummary.shipping + tax;
-
+  
     setOrderSummary({
       ...orderSummary,
       subtotal,
       tax,
       total
     });
+  
+    // Update amount in shipping data
+    setShippingData(prev => ({
+      ...prev,
+      amount: total.toFixed(2)  // Ensure 2 decimal places
+    }));
   }, [cart, orderSummary.shipping]);
-
+  
   useEffect(() => {
     if (cart.length === 0 && !initialLoad) {
       router.push('/userstore/userstorepages/allmedicines');
     }
   }, [cart, router, initialLoad]);
 
-  const handleRemoveItem = (medicineId) => {
-    removeFromCart(medicineId);
-  };
-
-  const handleShippingSubmit = (data) => {
+  const handleShippingSubmit = async (data) => {
     setShippingData(data);
     setActiveStep(2); // Move to payment step
   };
@@ -870,20 +736,63 @@ const Checkout = () => {
     setSelectedPaymentMethod(method);
   };
 
-  const handleContinueToPayment = () => {
-    // Validate the shipping form first
-    const shippingForm = document.getElementById('shipping-form');
-    if (shippingForm && shippingForm.checkValidity()) {
-      setActiveStep(2); // Move to payment step
-    } else if (shippingForm) {
-      shippingForm.reportValidity();
+  // 👇 Move this UP first
+  const handlePayProPayment = async () => {
+    try {
+      const orderNumber = 'PHARM-' + Math.floor(Math.random() * 1000000);
+  
+      const res = await axios.post('/api/payment/paypro', {
+        ...shippingData,
+        orderNumber,
+        items: cart.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      });
+  
+      const { paymentUrl, payProRawResponse } = res.data; // <- receive full PayPro response (backend must send)
+  
+      // Save order in database before redirecting
+      await saveOrderToDatabase({
+        paymentMethod: 'PayPro',
+        shippingInfo: shippingData,
+        items: cart,
+        total: orderSummary.total,
+        payProResponse: payProRawResponse
+      });
+  
+      localStorage.setItem('orderNumber', orderNumber);
+  
+      window.location.href = paymentUrl;
+    } catch (error) {
+      alert('Error creating payment: ' + (error?.response?.data?.error || error.message));
     }
   };
-
-// Update the handlePlaceOrder function in your checkout component
-const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-
-// In your Checkout component
+  const saveOrderToDatabase = async ({ paymentMethod, shippingInfo, items, total, payProResponse = null }) => {
+    const token = localStorage.getItem('token');
+  
+    if (!token) {
+      console.error('No token found');
+      return;
+    }
+  
+    try {
+      await axios.post('/api/orders', {
+        items,
+        shippingInfo: payProResponse ? { ...shippingInfo, payProResponse } : shippingInfo,
+        paymentMethod,
+        total
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Failed to save order:', error);
+    }
+  };
+    
 const handlePlaceOrder = async () => {
   if (!selectedPaymentMethod) {
     alert('Please select a payment method');
@@ -891,85 +800,77 @@ const handlePlaceOrder = async () => {
   }
 
   setIsPlacingOrder(true);
-  
+
   try {
-    // Get user info
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isAuthenticated = !!user?.id;
+    if (selectedPaymentMethod === 'paypro') {
+      await handlePayProPayment(); 
+    } else if (selectedPaymentMethod === 'cashOnDelivery') {
+      // Save order in database (COD)
+      await saveOrderToDatabase({
+        paymentMethod: 'Cash on Delivery',
+        shippingInfo: shippingData,
+        items: cart,
+        total: orderSummary.total
+      });
 
-    // Validate cart items
-    const validationResults = await validateCartItems(cart);
-    const invalidItems = validationResults.filter(item => !item.valid);
-    
-    if (invalidItems.length > 0) {
-      const errorMsg = invalidItems.map(item => 
-        `${item.name || `Medicine ID ${item.medicineId}`}: ${item.error}`
-      ).join('\n');
-      
-      alert(`Cannot complete order:\n${errorMsg}\n\nPlease update your cart and try again.`);
-      return;
+      clearCart();
+      setActiveStep(3); 
+    } else {
+      alert('Invalid payment method');
     }
-
-    // Prepare order data
-    const orderData = {
-      items: cart.map(item => ({
-        medicine_id: item.medicine_id,
-        quantity: item.quantity,
-        price: item.price,
-        name: item.name
-      })),
-      shippingInfo: shippingData,
-      paymentMethod: selectedPaymentMethod,
-      total: orderSummary.total,
-      userId: user?.id || null
-    };
-
-    console.log('Submitting order with data:', orderData); // Debug log
-
-    // Submit order
-    const response = await fetch('/api/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': isAuthenticated ? `Bearer ${localStorage.getItem('token')}` : ''
-      },
-      body: JSON.stringify(orderData)
-    });
-
-    const responseText = await response.text();
-    let responseData;
-    try {
-      responseData = responseText ? JSON.parse(responseText) : {};
-    } catch (e) {
-      console.error('Failed to parse JSON response:', responseText);
-      throw new Error('Invalid server response');
-    }
-
-    console.log('API Response:', { status: response.status, data: responseData }); // Debug log
-    
-    if (!response.ok) {
-      throw new Error(responseData.message || `Order failed with status ${response.status}`);
-    }
-
-    // Clear cart only after successful order
-    clearCart();
-    setActiveStep(3);
-    
   } catch (error) {
-    console.error('Full order placement error:', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    alert(`Order failed: ${error.message}\n\nPlease try again or contact support.`);
+    console.error('Order placement error:', error);
+    alert('An error occurred. Please try again.');
   } finally {
     setIsPlacingOrder(false);
   }
 };
-
+  
   const handleReturnToShop = () => {
     router.push('/userstore/userstorepages/allmedicines');
   };
+
+  if (sessionExpired) {
+    return (
+      <Box sx={{ textAlign: 'center', mt: 25 }}>
+        <NavBar/>
+        <Typography variant="h4" sx={{ color: 'red', fontWeight: 'bold' }}>
+          404 - Session Expired
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Your session has expired. Please log in to continue.
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ mt: 3, bgcolor: '#002F6C' }}
+          onClick={() => {
+            localStorage.setItem('redirectAfterLogin', '/userstore/userstorepages/allmedicines/cart');
+            window.location.href = '/userlogin';
+          }}
+        >
+          Go to Login
+        </Button>
+        <FooterSection/>
+      </Box>
+    );
+  }
+  
+  if (isCheckingStatus) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column'
+      }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 3 }}>
+          Verifying your payment...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -997,45 +898,60 @@ const handlePlaceOrder = async () => {
             <Grid item xs={12} lg={8}>
               <Paper sx={{ p: 3, mb: 3 }}>
                 {activeStep === 1 && (
-                  <ShippingForm 
-                    formData={shippingData} 
-                    onSubmit={handleShippingSubmit} 
-                  />
+                  // In the Checkout component's render where ShippingForm is used
+<ShippingForm 
+  formData={shippingData} 
+  onSubmit={handleShippingSubmit}
+  orderTotal={orderSummary.total}  // Pass the calculated total
+/>
                 )}
 
-                {activeStep >= 2 && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" sx={{ color: '#002F6C', mb: 2 }}>
-                      Shipping Information
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="body2">
-                          <strong>Name:</strong> {shippingData.firstName} {shippingData.lastName}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Email:</strong> {shippingData.email}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Phone:</strong> {shippingData.phone}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="body2">
-                          <strong>Address:</strong> {shippingData.address}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>City:</strong> {shippingData.city}, {shippingData.state} {shippingData.postalCode}
-                        </Typography>
-                        {shippingData.deliveryInstructions && (
-                          <Typography variant="body2">
-                            <strong>Instructions:</strong> {shippingData.deliveryInstructions}
-                          </Typography>
-                        )}
-                      </Grid>
-                    </Grid>
-                  </Box>
-                )}
+{activeStep >= 2 && (
+  <Box sx={{ mb: 3 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Typography variant="h6" sx={{ color: '#002F6C', mb: 2 }}>
+        Shipping Information
+      </Typography>
+      {/* Edit Button */}
+      <Button 
+        size="small" 
+        variant="outlined" 
+        onClick={() => setActiveStep(1)}
+        sx={{
+          ml: 2,
+          borderColor: '#002F6C',
+          color: '#002F6C',
+          '&:hover': {
+            borderColor: '#00224E',
+            backgroundColor: 'rgba(0, 47, 108, 0.05)',
+          }
+        }}
+      >
+        Edit
+      </Button>
+    </Box>
+
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Typography variant="body2">
+          <strong>Name:</strong> {shippingData.name}
+        </Typography>
+        <Typography variant="body2">
+          <strong>Email:</strong> {shippingData.email}
+        </Typography>
+        <Typography variant="body2">
+          <strong>Phone:</strong> {shippingData.phone}
+        </Typography>
+        <Typography variant="body2">
+          <strong>Address:</strong> {shippingData.address}
+        </Typography>
+        <Typography variant="body2">
+          <strong>Amount:</strong>{shippingData.amount}
+        </Typography>
+      </Grid>
+    </Grid>
+  </Box>
+)}
 
                 <Paper sx={{ 
                   p: 3, 
@@ -1056,13 +972,23 @@ const handlePlaceOrder = async () => {
     bgcolor: '#002F6C', 
     '&:hover': { bgcolor: '#00224E' },
     px: 4,
-    py: 1
+    py: 1,
+    minWidth: '200px',
+    minHeight: '48px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   }}
   onClick={handlePlaceOrder}
   disabled={!selectedPaymentMethod || isPlacingOrder}
 >
-  {isPlacingOrder ? 'Processing...' : 'Place Order'}
+  {isPlacingOrder ? (
+    <CircularProgress size={24} sx={{ color: 'white' }} />
+  ) : (
+    'Proceed to Payment'
+  )}
 </Button>
+
                     </Box>
                   )}
                 </Paper>
@@ -1073,10 +999,10 @@ const handlePlaceOrder = async () => {
                       Order Confirmed!
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 3 }}>
-                      Thank you for your order. We have received your purchase and will begin processing it right away.
+                      Thank you for your order. We have received your payment and will begin processing your order.
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 3 }}>
-                      Your order reference: <strong>MED-{Date.now().toString().substring(6)}</strong>
+                      Your order reference: <strong>PHARM-{Date.now().toString().substring(6)}</strong>
                     </Typography>
                     <Button 
                       variant="outlined" 
@@ -1097,14 +1023,11 @@ const handlePlaceOrder = async () => {
             {/* Right column - Order Summary */}
             <Grid item xs={12} lg={4}>
               <Box sx={{ position: { lg: 'sticky' }, top: '150px' }}>
-              <OrderSummary 
-        cartItems={cart} 
-        orderSummary={orderSummary}
-        activeStep={activeStep}
-        onContinueToPayment={handleContinueToPayment}
-        onReturnToShop={handleReturnToShop}
-        handleRemoveItem={removeFromCart}
-      />
+                <OrderSummary 
+                  cartItems={cart} 
+                  orderSummary={orderSummary}
+                  handleRemoveItem={removeFromCart}
+                />
               </Box>
             </Grid>
           </Grid>

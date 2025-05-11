@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  Card,
-  CardMedia,
-  CardContent,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 const brands = [
   { name: "Reckitt", logo: "/reckitt.png" },
@@ -15,80 +9,95 @@ const brands = [
   { name: "Getz Pharma", logo: "/pha.png" },
   { name: "Martin Dow Marker", logo: "/mar.png" },
   { name: "Searle", logo: "/se.png" },
-  { name: "Hilton", logo: "/hi.jpg" },
+  { name: "Hilton", logo: "/hi.png" },
   { name: "Dvago", logo: "/partner1.png" },
   { name: "Mead Johnsons Nutrition", logo: "/e.png" },
   { name: "Dawai", logo: "/partner4.png" },
   { name: "Sehat", logo: "/partner3.png" },
 ];
 
-const allBrands = [...brands, ...brands];
+const allBrands = [...brands, ...brands]; // Duplicate for continuous scrolling
 
 export const TopBrandsSection = () => {
   return (
-    <Box id="brands" sx={{ mt: 10, px: 3, overflow: "hidden" }}>
+    <Box
+      id="brands"
+      sx={{
+        mt: 10,
+        py: 8,
+        width: "100%",
+        backgroundImage: `url('/pharma-bg-light.jpg')`, // Your soft background
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
       <Typography
-        variant="h5"
-        sx={{ fontWeight: "bold", mb: 5, textAlign: "left" }}
+        variant="h4"
+        sx={{
+          fontWeight: "bold",
+          mb: 5,
+          textAlign: "center",
+          color: "#002F6C",
+          textShadow: "1px 1px 3px rgba(255,255,255,0.7)",
+        }}
       >
-        Top Brands
+        Our Trusted Partners
       </Typography>
 
-      {/* Outer container for spacing */}
-      <Box sx={{ pl: 4, pr: 4 }}> {/* Add padding left/right here */}
+      {/* Scrolling Logos */}
+      <Box sx={{ overflow: "hidden", px: 2 }}>
         <Box
           sx={{
             display: "flex",
+            alignItems: "center",
+            gap: 6,
+            animation: "scrollLeft 40s linear infinite",
             width: "max-content",
-            animation: "scrollLeft 30s linear infinite",
-            gap: 2,
           }}
         >
           {allBrands.map((brand, index) => (
-            <Card
+            <Box
               key={index}
               sx={{
-                minWidth: "180px",
-                maxWidth: "180px",
-                height: "160px",
-                borderRadius: "12px",
-                transition: "transform 0.3s ease-in-out",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.15)",
-                border: "1px solid #E0E0E0",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                flexShrink: 0,
                 textAlign: "center",
-                padding: "10px",
-                backgroundColor: "white",
-                "&:hover": { transform: "scale(1.05)" },
+                "&:hover img": {
+                  transform: "scale(1.1)",
+                },
               }}
             >
-              <CardMedia
+              <Box
                 component="img"
-                image={brand.logo}
+                src={brand.logo}
                 alt={brand.name}
                 sx={{
-                  width: "90px",
-                  height: "60px",
+                  width: "150px",
+                  height: "auto",
                   objectFit: "contain",
+                  transition: "transform 0.4s ease",
+                  mx: 2,
                 }}
               />
-              <CardContent sx={{ padding: "5px 0 0 0" }}>
-                <Typography
-                  variant="body1"
-                  sx={{ fontWeight: "bold", fontSize: "14px", color: "#002f6c" }}
-                >
-                  {brand.name}
-                </Typography>
-              </CardContent>
-            </Card>
+              <Typography
+                variant="body1"
+                sx={{ 
+                  display: "block", 
+                  mt: 1, 
+                  fontWeight: "bold", 
+                  color: "#002F6C" 
+                }}
+              >
+                {brand.name}
+              </Typography>
+            </Box>
           ))}
         </Box>
       </Box>
 
-      {/* Keyframes animation */}
+      {/* Animation Keyframes */}
       <style jsx global>{`
         @keyframes scrollLeft {
           0% {

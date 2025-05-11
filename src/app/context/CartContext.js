@@ -21,24 +21,42 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const loadCart = async () => {
       try {
+        const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user'));
-        if (user?.id) {
+  
+        if (token && user?.id) {
           setUserId(user.id);
           await fetchUserCart(user.id);
         } else {
-          loadLocalCart();
+          // Instead of immediately loading guest cart here — we delay it
+          console.warn("Guest mode detected but NOT loading guest cart immediately");
+          setCart([]);  // 🛑 Empty cart if not logged in
         }
       } catch (error) {
         console.error("Failed to load cart:", error);
-        loadLocalCart();
+        setCart([]);  // 🛑 Empty cart if error
       } finally {
         setIsInitialized(true);
       }
     };
-
+  
     loadCart();
   }, []);
+  
 
+  const loadGuestCart = () => {
+    const savedCart = localStorage.getItem('pharmacy-guest-cart');
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+        updateCartMetrics(parsedCart);
+      } catch (error) {
+        console.error("Failed to parse guest cart", error);
+      }
+    }
+  };
+  
   const loadLocalCart = () => {
     const savedCart = localStorage.getItem('pharmacy-guest-cart');
     if (savedCart) {
@@ -54,11 +72,18 @@ export function CartProvider({ children }) {
 
   const fetchUserCart = async (userId) => {
     try {
-      const response = await fetch('/api/cart', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const token = localStorage.getItem('token');
+if (!token) {
+  console.warn("No token available for fetching cart");
+  throw new Error('No authentication token');  // Catch this properly
+}
+
+const response = await fetch('/api/cart', {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});
+
       
       if (!response.ok) throw new Error('Failed to fetch user cart');
       
@@ -72,15 +97,20 @@ export function CartProvider({ children }) {
   };
 
   const saveUserCart = async (items) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token');
+    const token = localStorage.getItem('token');
+    if (!token || !userId) {
+      // If no token, fallback to localStorage (guest user)
+      console.log("Saving cart locally for guest user");
+      localStorage.setItem('pharmacy-guest-cart', JSON.stringify(items));
+      return { success: true };
+    }
   
+    try {
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ items })
       });
@@ -101,15 +131,12 @@ export function CartProvider({ children }) {
       return data;
     } catch (error) {
       console.error("Cart save error:", error);
-      // Fallback to local storage for guest users
-      if (!userId) {
-        localStorage.setItem('pharmacy-guest-cart', JSON.stringify(items));
-        return { success: true };
-      }
       throw error;
     }
   };
 
+  
+  
   const updateCartMetrics = (items) => {
     const { uniqueCount, total } = calculateCartMetrics(items);
     setUniqueItemsCount(uniqueCount);
@@ -220,18 +247,20 @@ const mergeCarts = async (userId, guestCart) => {
 };
   return (
     <CartContext.Provider
-      value={{
-        cart,
-        cartCount: uniqueItemsCount,
-        uniqueItemsCount,
-        totalPrice,
-        addToCart,
-        removeFromCart,
-        updateCartItem,
-        clearCart,
-        mergeCarts
-      }}
-    >
+  value={{
+    cart,
+    cartCount: uniqueItemsCount,
+    uniqueItemsCount,
+    totalPrice,
+    addToCart,
+    removeFromCart,
+    updateCartItem,
+    clearCart,
+    mergeCarts,
+    loadGuestCart  // 👈 add this
+  }}
+>
+
       {children}
     </CartContext.Provider>
   );

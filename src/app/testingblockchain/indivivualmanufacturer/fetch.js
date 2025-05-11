@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { BrowserProvider, Contract } from "ethers";
-import ManufacturerNFTStorage from "../../../../artifacts/blockchain/contracts/manufacturerregistration.sol/ManufacturerNFTStorage.json";
-
+import ManufacturerNFTStorage  from "../../../../blockchain/artifacts/contracts/manufacturerregistration.sol/ManufacturerNFTStorage.json";
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MANUFACTURE_CONTRACT_ADDRESS;
 const ManufacturerNFTABI = ManufacturerNFTStorage.abi;
 

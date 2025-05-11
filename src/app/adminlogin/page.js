@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+
 import {
   Box,
   Typography,
@@ -30,6 +32,8 @@ const AdminLoginPage = () => {
   const [errorOpen, setErrorOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
 
   const handleTogglePasswordVisibility = () => {
@@ -38,48 +42,55 @@ const AdminLoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     setEmailError("");
     setPasswordError("");
-
+    setIsLoading(true); // Start loading
+  
     if (!email || !password) {
       setErrorMessage(email ? "Password is required" : "Email is required");
       setErrorOpen(true);
+      setIsLoading(false); // Stop loading
       return;
     }
-
+  
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError("Please enter a valid email address");
+      setIsLoading(false); // Stop loading
       return;
     }
-
+  
     try {
       const response = await fetch("/api/auth/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-    
+  
       const data = await response.json();
-    
       if (!response.ok) throw new Error(data.message || "Login failed");
-    
-      // Store only what we have
+  
       localStorage.setItem("adminEmail", email);
-      localStorage.setItem("adminName", "Admin"); // Hardcoded
-      
+      localStorage.setItem("adminName", "Admin");
+  
       setSuccessMessage("Login successful! Redirecting...");
       setSuccessOpen(true);
-      setTimeout(() => router.push("/admin"), 2000);
+  
+      setTimeout(() => {
+        setIsLoading(false); // Optional: not needed if redirected
+        router.push("/admin");
+      }, 2000);
     } catch (error) {
-      setErrorMessage(error.message === "Invalid email or password" 
-        ? "Invalid credentials" 
-        : "An error occurred");
+      setErrorMessage(
+        error.message === "Invalid email or password"
+          ? "Invalid credentials"
+          : "An error occurred"
+      );
       setErrorOpen(true);
+      setIsLoading(false); // Stop loading on failure
     }
   };
-
+  
   return (
     <>
       <Box sx={{ zIndex: 2000, position: "fixed", top: 0, left: 0, width: "100%" }}>
@@ -112,7 +123,7 @@ const AdminLoginPage = () => {
         <Box
           sx={{
             width: "100%",
-            height: { xs: "300px", md: "300px" },
+            height: { xs: "300px", md: "380px" },
             position: "relative",
             mb: 6,
             overflow: "hidden",
@@ -260,19 +271,25 @@ const AdminLoginPage = () => {
                 </FormControl>
 
                 <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    backgroundColor: "#002F6C",
-                    "&:hover": { backgroundColor: "#001A3A" },
-                    py: 1.5,
-                    fontSize: "1rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  Login
-                </Button>
+  type="submit"
+  variant="contained"
+  size="large"
+  disabled={isLoading}
+  sx={{
+    backgroundColor: "#002F6C",
+    "&:hover": { backgroundColor: "#001A3A" },
+    py: 1.5,
+    fontSize: "1rem",
+    fontWeight: 500,
+  }}
+>
+  {isLoading ? (
+    <CircularProgress size={24} sx={{ color: "#fff" }} />
+  ) : (
+    "Login"
+  )}
+</Button>
+
               </Box>
             </Grid>
 

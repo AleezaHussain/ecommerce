@@ -33,20 +33,27 @@ export default async function handler(req, res) {
       case 'GET':
         // Handle GET request - fetch user's orders
         const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Supabase fetch error:', error);
-          throw error;
-        }
-        
-        return res.status(200).json({ 
-          success: true,
-          orders: data || []  // Match the frontend expectation
-        });
+  .from('orders')
+  .select('*')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: false });
+
+if (error) {
+  console.warn('Warning fetching orders:', error.message || error);
+  // Don't throw - just return an empty orders array
+  return res.status(200).json({ 
+    success: false,
+    orders: [],
+    message: 'Could not fetch orders at the moment'
+  });
+}
+
+// Normal success
+return res.status(200).json({ 
+  success: true,
+  orders: data || []
+});
+
 
       case 'POST':
         // Handle POST request - create new order

@@ -1,29 +1,32 @@
 "use client";
 
-import React, { useRef } from "react";
-import {
-  Box,
-  Typography,
-  Card,
-  CardMedia,
-  CardContent,
-  Button,
-  IconButton,
-} from "@mui/material";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, Typography, Card, CardMedia, CardContent, Button, IconButton, CircularProgress } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-const famousMedicines = [
-  { name: "Panadol", brand: "GSK", category: "Pain Relief", packSize: "20 Tablets", price: "Rs 200", discount: "10% Off", originalPrice: "Rs 250", image: "/panadol.webp" },
-  { name: "Disprin", brand: "Bayer", category: "Pain Relief", packSize: "10 Tablets", price: "Rs 150", discount: "5% Off", originalPrice: "Rs 160", image: "/acha.jpg" },
-  { name: "Brufen", brand: "Abbott", category: "Anti-inflammatory", packSize: "12 Tablets", price: "Rs 300", discount: "15% Off", originalPrice: "Rs 350", image: "/images/b.jpg" },
-  { name: "Augmentin", brand: "GSK", category: "Antibiotic", packSize: "14 Tablets", price: "Rs 500", discount: "20% Off", originalPrice: "Rs 625", image: "/images/p.jpg" },
-  { name: "Ventolin", brand: "GSK", category: "Respiratory", packSize: "1 Inhaler", price: "Rs 350", discount: "5% Off", originalPrice: "Rs 370", image: "/images/ajeeb.png" },
-  { name: "Neurobion", brand: "Merck", category: "Vitamin Supplement", packSize: "30 Tablets", price: "Rs 400", discount: "10% Off", originalPrice: "Rs 450", image: "/images/a.jpg" },
-];
+// ✅ Import your existing fetch function
+import { fetchAllMedicines } from "../../../../lib/saleMedicineDb"; // change path as per your project
 
 export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOnlyDiscounted = false }) => {
   const scrollRef = useRef(null);
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMedicines = async () => {
+      try {
+        const data = await fetchAllMedicines();
+        setMedicines(data || []);
+      } catch (error) {
+        console.error("Failed to fetch medicines:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMedicines();
+  }, []);
 
   const handleScroll = (direction) => {
     if (scrollRef.current) {
@@ -31,17 +34,37 @@ export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOn
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
   };
+  
 
-  const medicinesToShow = showOnlyDiscounted 
-    ? famousMedicines.filter(medicine => medicine.discount)
-    : famousMedicines;
+  const medicinesToShow = showOnlyDiscounted
+    ? medicines.filter(medicine => medicine.discount)
+    : medicines;
 
-    return (
-      <Box id="famous" sx={{ ml: 3, mt: 10 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", mb: 4, textAlign: "left" }}>
+  return (
+    <Box id="famous" sx={{ ml: 3, mt: 10 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: "bold", textAlign: "left" }}>
           {title}
         </Typography>
-    
+        <Box>
+          <IconButton onClick={() => handleScroll("left")} sx={{ backgroundColor: "#f5f5f5", mr: 1 }}>
+            <ChevronLeftIcon />
+          </IconButton>
+          <IconButton onClick={() => handleScroll("right")} sx={{ backgroundColor: "#f5f5f5" }}>
+            <ChevronRightIcon />
+          </IconButton>
+        </Box>
+      </Box>
+
+      {loading ? (
+        <Box sx={{ textAlign: "center", py: 10 }}>
+          <CircularProgress />
+        </Box>
+      ) : medicinesToShow.length === 0 ? (
+        <Box sx={{ textAlign: "center", py: 8 }}>
+          <Typography>No medicines found.</Typography>
+        </Box>
+      ) : (
         <Box
           ref={scrollRef}
           sx={{
@@ -52,9 +75,6 @@ export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOn
             paddingBottom: "10px",
             paddingLeft: "0px",
             paddingRight: "30px",
-
-
-
             scrollbarWidth: "none",
             "&::-webkit-scrollbar": { display: "none" },
           }}
@@ -90,14 +110,14 @@ export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOn
                   {medicine.discount}
                 </Box>
               )}
-    
+
               <CardMedia
                 component="img"
-                image={medicine.image}
+                image={medicine.image || "/default-medicine.jpg"}
                 alt={medicine.name}
                 sx={{ height: "140px", objectFit: "contain", padding: "10px" }}
               />
-    
+
               <CardContent sx={{ textAlign: "center" }}>
                 <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: "16px" }}>
                   {medicine.name}
@@ -111,6 +131,7 @@ export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOn
                 <Typography variant="body2" sx={{ color: "#757575", fontSize: "14px" }}>
                   {medicine.packSize}
                 </Typography>
+
                 {medicine.originalPrice && (
                   <Typography
                     variant="body2"
@@ -119,13 +140,20 @@ export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOn
                     {medicine.originalPrice}
                   </Typography>
                 )}
+
                 <Typography variant="body1" sx={{ fontWeight: "bold", color: "#2E7D32", fontSize: "18px" }}>
                   {medicine.price}
                 </Typography>
+
                 <Button
                   variant="contained"
                   fullWidth
-                  sx={{ mt: 2, backgroundColor: "#016A70", "&:hover": { backgroundColor: "#014E50" } }}
+                  sx={{
+                    mt: 2,
+                    backgroundColor: "#1D4E89",
+                    fontWeight: "bold",
+                    "&:hover": { backgroundColor: "#163d6a", transform: "scale(1.03)" },
+                  }}
                 >
                   ADD TO CART
                 </Button>
@@ -133,7 +161,7 @@ export const FamousMedicinesSection = ({ title = "Most Famous Medicines", showOn
             </Card>
           ))}
         </Box>
-      </Box>
-    );
-    
+      )}
+    </Box>
+  );
 };

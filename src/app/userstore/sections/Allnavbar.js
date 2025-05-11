@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Link as MuiLink } from '@mui/material';
+import Loading from "../../components/loading.js"; // adjust path if needed
+
 import {
   Box,
   IconButton,
@@ -16,7 +18,8 @@ import {
   Button,
   ListItemAvatar,
   Avatar,
-  Divider
+  Divider,
+  CircularProgress 
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PersonIcon from "@mui/icons-material/Person";
@@ -34,6 +37,9 @@ const Allnavbar = () => {
   const pathname = usePathname();
   const isUserStorePage = pathname === "/userstore";
   const { uniqueItemsCount } = useCart(); // More explicit
+  const [isNavigatingToLogin, setIsNavigatingToLogin] = useState(false);
+  const [isRouteChanging, setIsRouteChanging] = useState(false);
+
 
   const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user')) : null;
 
@@ -59,6 +65,20 @@ const Allnavbar = () => {
     setIsCartOpen(false);
   };
 
+  const handleNavigateToLogin = () => {
+    setIsNavigatingToLogin(true);
+    setTimeout(() => {
+      router.push('/userlogin');
+    }, 1000); // Optional delay to show loading spinner
+  };
+  const handleRouteWithLoading = (target) => {
+    setIsRouteChanging(true);
+    setTimeout(() => {
+      router.push(target);
+    }, 800);
+  };
+  
+  
 
   const handleLogout = async () => {
     try {
@@ -192,6 +212,8 @@ const CartSideMenu = () => (
     </Box>
   </Drawer>
 );
+if (isNavigatingToLogin) return <Loading />;
+
 
   return (
     <>
@@ -199,7 +221,7 @@ const CartSideMenu = () => (
       <Box
         sx={{
           width: "100%",
-          bgcolor: "#D32F2F",
+          bgcolor: "#1d4e89",
           color: "white",
           textAlign: "center",
           padding: "8px 0",
@@ -217,7 +239,7 @@ const CartSideMenu = () => (
       <Box
         sx={{
           width: "100%",
-          bgcolor: "#002F6C",
+          bgcolor: "#0F1A3A ",
           padding: "10px 20px",
           display: "flex",
           justifyContent: "space-between",
@@ -237,13 +259,14 @@ const CartSideMenu = () => (
             sx={{ 
               textDecoration: 'none',
               display: 'inline-block',
-              mt: 9
+              mt: 10,
+              ml:-6
             }}
           >
             <Image 
-              src="/logob.png" 
+              src="/logoc.png" 
               alt="Logo" 
-              width={180} 
+              width={340} 
               height={200} 
               style={{ objectFit: 'contain' }}
             />
@@ -284,23 +307,23 @@ const CartSideMenu = () => (
 </Button>
     </Box>
   ) : (
-    <MuiLink
-      component={Link}
-      href="/userlogin"
-      color="inherit"
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.5,
-        textDecoration: 'none',
-        '&:hover': { textDecoration: 'underline' }
-      }}
-    >
-      <PersonIcon fontSize="small" />
-      <Typography component="span">
-        Sign In / Sign Up
-      </Typography>
-    </MuiLink>
+    <Button
+  onClick={handleNavigateToLogin}
+  color="inherit"
+  sx={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0.5,
+    textTransform: 'none',
+    '&:hover': { backgroundColor: 'rgba(105, 104, 104, 0.07)' }
+  }}
+>
+  <PersonIcon fontSize="small" />
+  <Typography component="span">
+    Sign In / Sign Up
+  </Typography>
+</Button>
+
   )}
   
   <IconButton color="inherit" onClick={handleCartClick}>
@@ -309,8 +332,9 @@ const CartSideMenu = () => (
     </Badge>
   </IconButton>
 </Box>
-      </Box>
 
+      </Box>
+      
 <Box
   sx={{
     display: "flex",
@@ -326,6 +350,7 @@ const CartSideMenu = () => (
     height: "45px",
   }}
 >
+  
         {categories.map((category, index) => (
           <MuiLink
             key={index}
@@ -345,72 +370,80 @@ const CartSideMenu = () => (
           </MuiLink>
         ))}
 
-        <MuiLink
-          component={Link}
-          href="/userstore/userstorepages/insights"
-          color="#002F6C"
-          sx={{
-            fontWeight: "bold",
-            fontSize: "16px",
-            textDecoration: 'none',
-            '&:hover': {
-              textDecoration: 'underline'
-            }
-          }}
-        >
-          Medicine Insights
-        </MuiLink>
+<MuiLink
+  component="button"
+  onClick={() => handleRouteWithLoading("/userstore/userstorepages/insights")}
+  sx={{
+    fontWeight: "bold",
+    fontSize: "16px",
+    textDecoration: 'none',
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#002F6C",
+    '&:hover': {
+      textDecoration: 'underline'
+    }
+  }}
+>
+  Medicine Insights
+</MuiLink>
 
-        {isUserStorePage ? (
-          <>
-            <MuiLink 
-              component={Link} 
-              href="/userstore/userstorepages/famous"
-              color="#002F6C"
-              sx={{
-                fontWeight: "bold",
-                fontSize: "16px",
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline'
-                }
-              }}
-            >
-              Famous medicine
-            </MuiLink>
-            <MuiLink 
-              component={Link} 
-              href={getLink("sale")}
-              color="#002F6C"
-              sx={{
-                fontWeight: "bold",
-                fontSize: "16px",
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline'
-                }
-              }}
-            >
-              Sale
-            </MuiLink>
-          </>
-        ) : (
-          <MuiLink 
-            component={Link}
-            href={"/userstore/userstorepages/famous"}
-            color="#002F6C"
-            sx={{
-              fontWeight: "bold",
-              fontSize: "16px",
-              textDecoration: 'none',
-              '&:hover': {
-                textDecoration: 'underline'
-              }
-            }}
-          >
-            Famous medicine
-          </MuiLink>
-        )}
+<MuiLink
+  component="button"
+  onClick={() => handleRouteWithLoading("/userstore/userstorepages/adpolicy")}
+  sx={{
+    fontWeight: "bold",
+    fontSize: "16px",
+    textDecoration: 'none',
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#002F6C",
+    '&:hover': {
+      textDecoration: 'underline'
+    }
+  }}
+>
+  Advertising Policy
+</MuiLink>
+
+<MuiLink
+  component="button"
+  onClick={() => handleRouteWithLoading("/userstore/userstorepages/manufacturerdescription")}
+  sx={{
+    fontWeight: "bold",
+    fontSize: "16px",
+    textDecoration: 'none',
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#002F6C",
+    '&:hover': {
+      textDecoration: 'underline'
+    }
+  }}
+>
+  Manufacturers
+</MuiLink>
+<MuiLink
+  component="button"
+  onClick={() => handleRouteWithLoading("/userstore/userstorepages/aboutus")}
+  sx={{
+    fontWeight: "bold",
+    fontSize: "16px",
+    textDecoration: 'none',
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#002F6C",
+    '&:hover': {
+      textDecoration: 'underline'
+    }
+  }}
+>
+  About PharmaGuard 24/7
+</MuiLink>
       </Box>
 
       <CartSideMenu />

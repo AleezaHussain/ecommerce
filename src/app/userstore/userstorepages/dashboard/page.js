@@ -25,30 +25,49 @@ export default function Dashboard() {
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchUserDataAndOrders = async () => {
       try {
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+          router.push('/userlogin');
+          return;
+        }
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+  
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.warn('No token found. Cannot fetch orders.');
+          setLoadingOrders(false);
+          return;
+        }
+  
         const response = await fetch('/api/orders', {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         });
-        
-        if (response.ok) {
+  
+        if (!response.ok) {
+          console.warn('Failed to fetch orders, status:', response.status);
+          setOrders([]); // ❗ Empty orders on failure
+        } else {
           const data = await response.json();
-          setOrders(data.orders);
+          setOrders(data.orders || []); // Ensure it's always an array
         }
+  
       } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.warn('Error fetching user or orders:', error.message);
+        setOrders([]); // ❗ Set empty on any error
       } finally {
+        setLoading(false);  // Finish loading both user and orders
         setLoadingOrders(false);
       }
     };
   
-    if (user?.id) {
-      fetchOrders();
-    }
-  }, [user]);
-
+    fetchUserDataAndOrders();
+  }, [router]);
+  
 
   useEffect(() => {
     // Check if user is logged in
@@ -65,8 +84,11 @@ export default function Dashboard() {
   const fetchUserOrders = async (userId) => {
     try {
       const token = localStorage.getItem('token');
+  
       if (!token) {
-        throw new Error('No authentication token found');
+        console.warn('No authentication token found. Skipping orders fetch.');
+        setOrders([]);  // Empty orders
+        return;         // Exit normally, without throwing
       }
   
       const response = await fetch('/api/orders', {
@@ -76,44 +98,30 @@ export default function Dashboard() {
       });
   
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to fetch orders (status ${response.status})`);
+        console.warn(`Failed to fetch orders, status: ${response.status}`);
+        setOrders([]);  // Empty orders
+        return;
       }
   
       const data = await response.json();
-      
-      // Ensure we're handling the response structure correctly
+  
       if (data.orders) {
         setOrders(data.orders);
       } else if (Array.isArray(data)) {
-        // Fallback for different response structure
         setOrders(data);
       } else {
-        throw new Error('Invalid orders data format');
+        console.warn('Unexpected orders data format');
+        setOrders([]);
       }
-      
-      setLoading(false);
+  
     } catch (error) {
-      console.error('Error fetching orders:', {
-        message: error.message,
-        stack: error.stack,
+      console.warn('Error fetching orders:', {
+        message: error?.message,
         timestamp: new Date().toISOString()
       });
-      
+      setOrders([]);
+    } finally {
       setLoading(false);
-      
-      // Fallback to mock data if API fails (for development)
-      setOrders([
-        {
-          id: 'NULL',
-          date: new Date().toISOString(),
-          total: 0,
-          status: 'Pending',
-          items: cart.length > 0 ? cart : [
-            { name: 'Sample Medicine', quantity: 0, price: 0 }
-          ]
-        }
-      ]);
     }
   };
   
@@ -218,14 +226,7 @@ export default function Dashboard() {
                         </Box>
                       ))}
 
-                      <Button 
-                        variant="text" 
-                        size="small" 
-                        sx={{ mt: 1 }}
-                        onClick={() => router.push(`/userstore/orders/${order.id}`)}
-                      >
-                        View Details
-                      </Button>
+                      
                     </Box>
                   ))
                 ) : (

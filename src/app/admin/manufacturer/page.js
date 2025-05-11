@@ -10,7 +10,7 @@ import ManufacturerSlideshow from "./ManufacturerSlideshow";
 import ChartsSection from "./ChartsSection";
 import { getPendingManufacturers, getApprovedManufacturers, getRejectedManufacturers } from "../../testingblockchain/accepted-rejected-manufacturer/fetch";
 import { updateManufacturerStatus } from '../../testingblockchain/pendingmanufacture/fetch';
-import { SuccessMsgBox, ErrorMsgBox } from "../../components/MsgBox";
+import { SuccessMsgBox, ErrorMsgBox, InfoMsgBox } from "../../components/MsgBox";
 import "../admin.css";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -22,9 +22,9 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
   const [acceptedManufacturers, setAcceptedManufacturers] = useState([]);
   const [rejectedManufacturers, setRejectedManufacturers] = useState([]);
   const [authenticityScore, setAuthenticityScore] = useState(null);
-  
   const [successAlert, setSuccessAlert] = useState({ open: false, message: "" });
   const [errorAlert, setErrorAlert] = useState({ open: false, message: "" });
+  const [infoAlert, setInfoAlert] = useState({ open: false, message: "" });
   const [value, setValue] = useState(0);
 
   const handleChange = (event, newValue) => {
@@ -33,25 +33,37 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
     handleSectionChange(sections[newValue]);
   };
 
-  
+  const loadAllManufacturers = async () => {
+    try {
+      const [pending, approved, rejected] = await Promise.all([
+        getPendingManufacturers(),
+        getApprovedManufacturers(),
+        getRejectedManufacturers()
+      ]);
+      setPendingManufacturers(pending);
+      setAcceptedManufacturers(approved);
+      setRejectedManufacturers(rejected);
+    } catch (error) {
+      console.error("Error loading manufacturers:", error);
+      setErrorAlert({ open: true, message: "Failed to load manufacturers." });
+    }
+  };
+
   useEffect(() => {
-    const loadManufacturers = async () => {
-      try {
-        const pending = await getPendingManufacturers();
-        const approved = await getApprovedManufacturers();
-        const rejected = await getRejectedManufacturers();
-
-        setPendingManufacturers(pending);
-        setAcceptedManufacturers(approved);
-        setRejectedManufacturers(rejected);
-      } catch (error) {
-        console.error("Error loading manufacturers:", error);
-        setErrorAlert({ open: true, message: "Failed to load manufacturers." });
-      }
-    };
-
-    loadManufacturers();
+    loadAllManufacturers();
   }, []);
+
+  const showSuccessAlert = (message) => {
+    setSuccessAlert({ open: true, message });
+  };
+  
+  const showErrorAlert = (message) => {
+    setErrorAlert({ open: true, message });
+  };
+  
+  const showInfoAlert = (message) => {
+    setInfoAlert({ open: true, message });
+  };
 
   const handleView = async (id) => {
     const selected = pendingManufacturers.find((m) => m.tokenId === id);
@@ -67,38 +79,29 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
 
   const handleAcceptClick = async (tokenId) => {
     try {
-      const success = await updateManufacturerStatus(tokenId, "Approved");
-      if (success) {
-        const pending = await getPendingManufacturers();
-        const approved = await getApprovedManufacturers();
-        setPendingManufacturers(pending);
-        setAcceptedManufacturers(approved);
-        setSuccessAlert({ open: true, message: "Manufacturer approved successfully!" });
-      }
+      showInfoAlert("Please confirm the approval in MetaMask...");
+      await updateManufacturerStatus(tokenId, "Approved");
+      await loadAllManufacturers();
+      showSuccessAlert("Manufacturer approved successfully!");
+      return true;
     } catch (error) {
       console.error("Error accepting manufacturer:", error);
-      setErrorAlert({ open: true, message: "Failed to approve manufacturer." });
+      showErrorAlert(error.message || "Failed to approve manufacturer.");
+      return false;
     }
   };
 
   const handleReject = async (tokenId) => {
     try {
-      const manufacturer = pendingManufacturers.find(m => m.tokenId === tokenId);
-      if (!manufacturer) {
-        throw new Error("Manufacturer not found");
-      }
-
-      const success = await updateManufacturerStatus(tokenId, "Rejected");
-      if (success) {
-        const pending = await getPendingManufacturers();
-        const rejected = await getRejectedManufacturers();
-        setPendingManufacturers(pending);
-        setRejectedManufacturers(rejected);
-        setSuccessAlert({ open: true, message: "Manufacturer rejected successfully!" });
-      }
+      showInfoAlert("Please confirm the rejection in MetaMask...");
+      await updateManufacturerStatus(tokenId, "Rejected");
+      await loadAllManufacturers();
+      showSuccessAlert("Manufacturer rejected successfully!");
+      return true;
     } catch (error) {
       console.error("Error rejecting manufacturer:", error);
-      setErrorAlert({ open: true, message: "Failed to reject manufacturer." });
+      showErrorAlert(error.message || "Failed to reject manufacturer.");
+      return false;
     }
   };
 
@@ -117,17 +120,10 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", width: "100%",left:0 }}>
-      
-
-      {/* Main Content */}
       <Box sx={{ flex: 1, padding: "30px", display: "flex", flexDirection: "column" }}>
-      
-        
-
-        {/* Tabs Section */}
         <Box sx={{ margin: "1px" }}>
-        <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: "transparent", boxShadow: "none" }}>
-        <Tabs
+          <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: "transparent", boxShadow: "none" }}>
+            <Tabs
               value={value}
               onChange={handleChange}
               variant="fullWidth"
@@ -151,7 +147,6 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
             </Tabs>
           </Paper>
 
-          {/* Tab Content */}
           <Box sx={{ mt: 2 }}>
             {value === 0 && (
               <ManufacturerSlideshow
@@ -164,6 +159,10 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
                 setSelectedManufacturer={setSelectedManufacturer}
                 authenticityScore={authenticityScore}
                 setAuthenticityScore={setAuthenticityScore}
+                onStatusUpdate={loadAllManufacturers}
+                showInfoAlert={showInfoAlert}
+                showSuccessAlert={showSuccessAlert}
+                showErrorAlert={showErrorAlert}
               />
             )}
             {value === 1 && (
@@ -173,8 +172,8 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
                 handleView={handleView}
                 selectedManufacturer={selectedManufacturer}
                 setSelectedManufacturer={setSelectedManufacturer}
-                authenticityScore={authenticityScore} // ✅ ADD THIS
-    setAuthenticityScore={setAuthenticityScore} // ✅ ADD THIS
+                authenticityScore={authenticityScore}
+                setAuthenticityScore={setAuthenticityScore}
               />
             )}
             {value === 2 && (
@@ -184,8 +183,8 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
                 handleView={handleView}
                 selectedManufacturer={selectedManufacturer}
                 setSelectedManufacturer={setSelectedManufacturer}
-                authenticityScore={authenticityScore} // ✅ ADD THIS
-    setAuthenticityScore={setAuthenticityScore} // ✅ ADD THIS
+                authenticityScore={authenticityScore}
+                setAuthenticityScore={setAuthenticityScore}
               />
             )}
             {value === 3 && (
@@ -193,15 +192,14 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
                 pendingManufacturers={pendingManufacturers}
                 acceptedManufacturers={acceptedManufacturers}
                 rejectedManufacturers={rejectedManufacturers}
-                authenticityScore={authenticityScore} // ✅ ADD THIS
-    setAuthenticityScore={setAuthenticityScore} // ✅ ADD THIS
+                authenticityScore={authenticityScore}
+                setAuthenticityScore={setAuthenticityScore}
               />
             )}
           </Box>
         </Box>
       </Box>
 
-      {/* Success and Error Alerts */}
       <SuccessMsgBox
         open={successAlert.open}
         onClose={() => setSuccessAlert({ open: false, message: "" })}
@@ -212,8 +210,13 @@ const ManufacturerPage = ({ activeSection, handleSectionChange }) => {
         onClose={() => setErrorAlert({ open: false, message: "" })}
         message={errorAlert.message}
       />
+      <InfoMsgBox
+        open={infoAlert.open}
+        onClose={() => setInfoAlert({ open: false, message: "" })}
+        message={infoAlert.message}
+      />
     </Box>
   );
 };
 
-export default ManufacturerPage;
+export default ManufacturerPage;  
