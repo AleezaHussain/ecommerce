@@ -48,9 +48,9 @@ export default async function handler(req, res) {
         {
           OrderNumber: orderNumber, // ✅ from frontend
           OrderAmount: amount,
-          OrderDueDate: '20/04/2025',
+          OrderDueDate: '20/05/2025',
           OrderType: 'Product',
-          IssueDate: '16/04/2025',
+          IssueDate: '5/05/2025',
           OrderExpireAfterSeconds: '0',
           CustomerName: name,
           CustomerMobile: phone,
